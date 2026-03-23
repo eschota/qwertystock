@@ -1,0 +1,20 @@
+---
+description: Деплой на way — один клон /home/debian/qwertystock, инсталлер, version.json
+alwaysApply: true
+---
+
+# Деплой QwertyStock (way)
+
+**Прод-клон на сервере way:** `/home/debian/qwertystock` — не подставлять вымышленные пути.
+
+Релиз инсталлера (bump patch, сборка, `/var/www/installer`, commit, push):
+
+```bash
+cd /home/debian/qwertystock && ./scripts/release-installer-and-push.sh
+```
+
+Только сборка и www без bump/git: `cd /home/debian/qwertystock && ./scripts/publish_installer_to_www.sh`
+
+Проверка: `curl -sS https://way.qwertystock.com/installer/version.json`
+
+Детали: **`docs/DEPLOY.md`**.
