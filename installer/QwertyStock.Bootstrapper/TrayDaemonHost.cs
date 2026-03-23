@@ -278,7 +278,7 @@ public sealed class TrayDaemonHost : IDisposable
             var state = _store.LoadOrCreate();
             p = _orch.ServerLauncher.Start(state);
             WireWatchdog(p);
-            _ = ServerLauncher.WaitForHttpOkAsync(CancellationToken.None);
+            _ = _orch.ServerLauncher.WaitForHttpOkAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -322,7 +322,7 @@ public sealed class TrayDaemonHost : IDisposable
             var state = _store.LoadOrCreate();
             var p = _orch.ServerLauncher.Start(state);
             WireWatchdog(p);
-            await ServerLauncher.WaitForHttpOkAsync(CancellationToken.None).ConfigureAwait(true);
+            await _orch.ServerLauncher.WaitForHttpOkAsync(CancellationToken.None).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
@@ -351,7 +351,7 @@ public sealed class TrayDaemonHost : IDisposable
             var state = _store.LoadOrCreate();
             var p = _orch.ServerLauncher.Start(state);
             WireWatchdog(p);
-            await ServerLauncher.WaitForHttpOkAsync(CancellationToken.None).ConfigureAwait(false);
+            await _orch.ServerLauncher.WaitForHttpOkAsync(CancellationToken.None).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

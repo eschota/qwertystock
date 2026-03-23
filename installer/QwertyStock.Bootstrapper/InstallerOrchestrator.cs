@@ -63,7 +63,7 @@ public sealed class InstallerOrchestrator
 
         _server.Start(state);
         _store.Save(state);
-        await ServerLauncher.WaitForHttpOkAsync(ct).ConfigureAwait(false);
+        await _server.WaitForHttpOkAsync(ct).ConfigureAwait(false);
         StartMenuShortcut.CreateOrUpdate();
         ServerLauncher.OpenBrowser();
         return StartupLaunchResult.RunTrayDaemon;
@@ -152,7 +152,7 @@ public sealed class InstallerOrchestrator
         _store.Save(state);
 
         progress?.Report(new InstallProgress(ProgressSegments.HttpWaitEnd - 1, InstallerStrings.ProgressWaitHttp, false));
-        await ServerLauncher.WaitForHttpOkAsync(ct).ConfigureAwait(false);
+        await _server.WaitForHttpOkAsync(ct).ConfigureAwait(false);
 
         progress?.Report(new InstallProgress(99, InstallerStrings.ProgressBrowser, false));
         ServerLauncher.OpenBrowser();

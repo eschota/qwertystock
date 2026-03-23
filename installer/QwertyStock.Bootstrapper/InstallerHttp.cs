@@ -35,19 +35,50 @@ public static class InstallerHttp
     /// Отдельный клиент для скачивания крупного бинарника (qwertystock.exe): тот же прокси, без авто-декомпрессии,
     /// <see cref="HttpClient.Timeout"/> = 0 (без лимита) — иначе ~160 MB на медленном канале обрывается через 20 мин.
     /// </summary>
-    public static HttpClient CreateLargeBinaryDownloadClient()
+    public static HttpClient CreateLargeBinaryDownloadClient() =>
+        CreateLargeBinaryDownloadClient(_configuredProxy);
+
+    /// <summary>Тот же режим, что <see cref="CreateLargeBinaryDownloadClient()"/>, но с явным прокси (перебор маршрутов self-update).</summary>
+    public static HttpClient CreateLargeBinaryDownloadClient(IWebProxy? proxy)
     {
         if (_client == null)
             throw new InvalidOperationException("InstallerHttp.Initialize not called.");
 
         var handler = new SocketsHttpHandler
         {
-            UseProxy = _configuredProxy != null,
-            Proxy = _configuredProxy,
+            UseProxy = proxy != null,
+            Proxy = proxy,
             AutomaticDecompression = DecompressionMethods.None,
             MaxConnectionsPerServer = 4,
         };
-        WebProxyHelper.ApplyLocalBypass(_configuredProxy as WebProxy);
+        WebProxyHelper.ApplyLocalBypass(proxy as WebProxy);
         return new HttpClient(handler, disposeHandler: true) { Timeout = TimeSpan.Zero };
+    }
+
+    /// <summary>После успешного self-update через другой маршрут — git/manifest дальше идут тем же прокси.</summary>
+    public static void ReplaceWithProxy(IWebProxy? proxy)
+    {
+        if (_client == null)
+            throw new InvalidOperationException("InstallerHttp.Initialize not called.");
+
+        try
+        {
+            _client.Dispose();
+        }
+        catch
+        {
+            // ignore
+        }
+
+        _configuredProxy = proxy;
+        var handler = new SocketsHttpHandler
+        {
+            UseProxy = proxy != null,
+            Proxy = proxy,
+            AutomaticDecompression = DecompressionMethods.All,
+            MaxConnectionsPerServer = 16,
+        };
+        WebProxyHelper.ApplyLocalBypass(proxy as WebProxy);
+        _client = new HttpClient(handler, disposeHandler: true) { Timeout = TimeSpan.FromMinutes(20) };
     }
 }

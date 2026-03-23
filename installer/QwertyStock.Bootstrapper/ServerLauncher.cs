@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net.Http;
+using System.Text;
 
 namespace QwertyStock.Bootstrapper;
 
@@ -168,13 +169,31 @@ public sealed class ServerLauncher
         }
     }
 
-    public static async Task WaitForHttpOkAsync(CancellationToken ct)
+    /// <summary>
+    /// Ждёт HTTP 2xx на локальном сервере. Если процесс Python уже завершился (импорт, отсутствие файлов) — сразу исключение с хвостом server.log.
+    /// </summary>
+    public async Task WaitForHttpOkAsync(CancellationToken ct)
     {
         var http = InstallerHttp.Client;
-        var deadline = DateTime.UtcNow.AddMinutes(2);
+        var deadline = DateTime.UtcNow.AddMinutes(5);
         while (DateTime.UtcNow < deadline)
         {
             ct.ThrowIfCancellationRequested();
+
+            if (LastProcess is { HasExited: true })
+            {
+                var code = LastProcess.ExitCode;
+                var tail = TryReadServerLogTail(12_000);
+                throw new InvalidOperationException(
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        "The local web server process exited before HTTP responded (exit code {0}). See {1}. Log tail:{2}{3}",
+                        code,
+                        InstallerPaths.ServerLog,
+                        Environment.NewLine,
+                        tail));
+            }
+
             try
             {
                 using var attempt = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -191,11 +210,39 @@ public sealed class ServerLauncher
             await Task.Delay(500, ct).ConfigureAwait(false);
         }
 
+        var tailTimeout = TryReadServerLogTail(12_000);
         throw new InvalidOperationException(
             string.Format(
-                System.Globalization.CultureInfo.InvariantCulture,
-                "Timed out waiting for {0} to respond.",
-                InstallerPaths.LocalServerUrl.TrimEnd('/')));
+                CultureInfo.InvariantCulture,
+                "Timed out waiting for {0} to respond (5 min). If Python is still running, check firewall/antivirus. Server log ({1}):{2}{3}",
+                InstallerPaths.LocalServerUrl.TrimEnd('/'),
+                InstallerPaths.ServerLog,
+                Environment.NewLine,
+                tailTimeout));
+    }
+
+    private static string TryReadServerLogTail(int maxBytes)
+    {
+        try
+        {
+            var path = InstallerPaths.ServerLog;
+            if (!File.Exists(path))
+                return "(server.log not written yet — process may have crashed before logging.)";
+
+            using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var len = fs.Length;
+            if (len == 0)
+                return "(server.log is empty.)";
+            var take = (int)Math.Min(maxBytes, len);
+            fs.Seek(-take, SeekOrigin.End);
+            var buf = new byte[take];
+            var read = fs.Read(buf, 0, take);
+            return Encoding.UTF8.GetString(buf, 0, read);
+        }
+        catch (Exception ex)
+        {
+            return "(could not read server.log: " + ex.Message + ")";
+        }
     }
 
     public static void OpenBrowser()

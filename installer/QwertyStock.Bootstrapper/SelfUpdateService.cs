@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 
@@ -6,6 +7,11 @@ namespace QwertyStock.Bootstrapper;
 
 public sealed class SelfUpdateService
 {
+    /// <summary>Окно после старта загрузки: если меньше байт — маршрут считаем мёртвым, пробуем прокси из каталога.</summary>
+    private const int SlowTransferWindowSeconds = 15;
+
+    private const long MinBytesInSlowWindow = 64 * 1024;
+
     private readonly InstallerLogger _log;
 
     public SelfUpdateService(InstallerLogger log)
@@ -34,8 +40,7 @@ public sealed class SelfUpdateService
         var staged = Path.Combine(dir, Path.GetFileNameWithoutExtension(name) + ".pending" + Path.GetExtension(name));
 
         var effectiveProgress = MergeDownloadProgress(downloadProgress);
-        using var http = InstallerHttp.CreateLargeBinaryDownloadClient();
-        await DownloadWithRetriesAsync(http, manifest, staged, effectiveProgress, ct).ConfigureAwait(false);
+        await DownloadWithProxyRoutesAsync(manifest, staged, effectiveProgress, ct).ConfigureAwait(false);
 
         if (!string.IsNullOrWhiteSpace(manifest.Sha256))
             HttpHash.VerifyFileSha256Hex(staged, manifest.Sha256);
@@ -104,8 +109,106 @@ public sealed class SelfUpdateService
         });
     }
 
-    private async Task DownloadWithRetriesAsync(
-        HttpClient http,
+    /// <summary>
+    /// Короткий probe к манифесту уже прошёл (EnsureAsync), но большой exe может идти с нулевой скоростью.
+    /// Перебираем тот же каталог прокси, что и инсталлер; при успехе через другой маршрут — обновляем ProxySession + InstallerHttp для git.
+    /// </summary>
+    private async Task DownloadWithProxyRoutesAsync(
+        InstallerManifest manifest,
+        string staged,
+        IProgress<TransferProgress>? downloadProgress,
+        CancellationToken ct)
+    {
+        var routes = BuildSelfUpdateDownloadRoutes();
+        for (var i = 0; i < routes.Count; i++)
+        {
+            var route = routes[i];
+            _log.Info($"Self-update: route {i + 1}/{routes.Count} — {route.Label}");
+            var ok = await TryDownloadRouteWithRetriesAsync(route, manifest, staged, downloadProgress, ct).ConfigureAwait(false);
+            if (!ok)
+                continue;
+
+            AlignSessionWithSuccessfulRoute(route);
+            return;
+        }
+
+        throw new InvalidOperationException("Self-update: не удалось скачать exe ни по одному маршруту (прямой + прокси из каталога).");
+    }
+
+    private readonly record struct DownloadRoute(
+        string Label,
+        IWebProxy? Proxy,
+        /// <summary>null = прямой доступ; иначе URI для <see cref="ProxySession.SetProxy"/>.</summary>
+        string? SessionUri,
+        bool IsHttpProxy);
+
+    private static List<DownloadRoute> BuildSelfUpdateDownloadRoutes()
+    {
+        var catalog = ProxyCatalog.Load();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var list = new List<DownloadRoute>();
+
+        void TryAdd(string dedupeKey, DownloadRoute route)
+        {
+            if (!seen.Add(dedupeKey))
+                return;
+            list.Add(route);
+        }
+
+        if (ProxySession.IsDirect)
+            TryAdd("direct", new DownloadRoute("прямое подключение", null, null, false));
+        else if (!string.IsNullOrEmpty(ProxySession.ActiveProxyUri)
+                 && Uri.TryCreate(ProxySession.ActiveProxyUri, UriKind.Absolute, out var curU))
+        {
+            TryAdd(
+                "cur:" + ProxySession.ActiveProxyUri,
+                new DownloadRoute(
+                    $"текущий ({ProxySession.ActiveProxyUri})",
+                    new WebProxy(curU),
+                    ProxySession.ActiveProxyUri,
+                    ProxySession.IsHttpProxy));
+        }
+
+        foreach (var s in catalog.Http)
+        {
+            if (!Uri.TryCreate(s, UriKind.Absolute, out var u))
+                continue;
+            TryAdd("http:" + u.GetLeftPart(UriPartial.Authority), new DownloadRoute($"HTTP {s}", new WebProxy(u), s, true));
+        }
+
+        foreach (var s in catalog.Socks5)
+        {
+            if (!Uri.TryCreate(s, UriKind.Absolute, out var u))
+                continue;
+            TryAdd("socks:" + u.GetLeftPart(UriPartial.Authority), new DownloadRoute($"SOCKS5 {s}", new WebProxy(u), s, false));
+        }
+
+        return list;
+    }
+
+    private static void AlignSessionWithSuccessfulRoute(DownloadRoute route)
+    {
+        if (route.SessionUri == null)
+        {
+            if (!ProxySession.IsDirect)
+            {
+                ProxySession.SetDirect();
+                InstallerHttp.ReplaceWithProxy(null);
+            }
+
+            return;
+        }
+
+        if (!ProxySession.IsDirect
+            && string.Equals(ProxySession.ActiveProxyUri, route.SessionUri, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        ProxySession.SetProxy(route.SessionUri, route.IsHttpProxy);
+        InstallerHttp.ReplaceWithProxy(new WebProxy(new Uri(route.SessionUri)));
+    }
+
+    private async Task<bool> TryDownloadRouteWithRetriesAsync(
+        DownloadRoute route,
         InstallerManifest manifest,
         string staged,
         IProgress<TransferProgress>? downloadProgress,
@@ -116,28 +219,98 @@ public sealed class SelfUpdateService
         {
             try
             {
-                if (File.Exists(staged))
-                {
-                    try
-                    {
-                        File.Delete(staged);
-                    }
-                    catch
-                    {
-                        // ignore
-                    }
-                }
-
-                await HttpDownload.DownloadLargeBinaryToFileAsync(http, manifest.Url, staged, downloadProgress, ct).ConfigureAwait(false);
-                return;
+                TryDeleteStaged(staged);
+                using var http = InstallerHttp.CreateLargeBinaryDownloadClient(route.Proxy);
+                await DownloadWithSlowTransferWatchdogAsync(http, manifest.Url, staged, downloadProgress, ct).ConfigureAwait(false);
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                if (ct.IsCancellationRequested)
+                    throw;
+                _log.Info($"Self-update: на маршруте «{route.Label}» скорость почти нулевая (< {MinBytesInSlowWindow} B за {SlowTransferWindowSeconds} с) — следующий маршрут.");
+                return false;
             }
             catch (Exception ex)
             {
                 if (attempt >= maxAttempts)
-                    throw;
+                {
+                    _log.Info($"Self-update: маршрут «{route.Label}» — попытка {attempt}/{maxAttempts} не удалась ({ex.Message}).");
+                    return false;
+                }
 
-                _log.Info($"Self-update: download attempt {attempt}/{maxAttempts} failed ({ex.Message}); retrying…");
+                _log.Info($"Self-update: маршрут «{route.Label}» — попытка {attempt}/{maxAttempts} ({ex.Message}), повтор…");
                 await Task.Delay(TimeSpan.FromSeconds(4 * attempt), ct).ConfigureAwait(false);
+            }
+        }
+
+        return false;
+    }
+
+    private static void TryDeleteStaged(string staged)
+    {
+        if (!File.Exists(staged))
+            return;
+        try
+        {
+            File.Delete(staged);
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+
+    /// <summary>Отмена загрузки, если за окно получено слишком мало данных (как при «живом» probe и мёртвом потоке).</summary>
+    private async Task DownloadWithSlowTransferWatchdogAsync(
+        HttpClient http,
+        string url,
+        string path,
+        IProgress<TransferProgress>? progress,
+        CancellationToken ct)
+    {
+        using var slowCts = new CancellationTokenSource();
+        using var downloadDone = new CancellationTokenSource();
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, slowCts.Token);
+        var received = 0L;
+        var wrapped = new Progress<TransferProgress>(tp =>
+        {
+            Interlocked.Exchange(ref received, tp.BytesReceived);
+            progress?.Report(tp);
+        });
+
+        var watchdog = Task.Run(
+            async () =>
+            {
+                try
+                {
+                    using var w = CancellationTokenSource.CreateLinkedTokenSource(ct, downloadDone.Token);
+                    await Task.Delay(TimeSpan.FromSeconds(SlowTransferWindowSeconds), w.Token).ConfigureAwait(false);
+                    if (Volatile.Read(ref received) < MinBytesInSlowWindow)
+                        slowCts.Cancel();
+                }
+                catch (OperationCanceledException)
+                {
+                    // отмена ct, завершение загрузки или нормальный таймер
+                }
+            },
+            ct);
+
+        try
+        {
+            await HttpDownload.DownloadLargeBinaryToFileAsync(http, url, path, wrapped, linked.Token).ConfigureAwait(false);
+        }
+        finally
+        {
+            downloadDone.Cancel();
+            slowCts.Cancel();
+            try
+            {
+                await watchdog.ConfigureAwait(false);
+            }
+            catch
+            {
+                // ignore
             }
         }
     }
