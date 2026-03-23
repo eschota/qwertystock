@@ -1,8 +1,6 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
-using XamlAnimatedGif;
 
 namespace QwertyStock.Bootstrapper;
 
@@ -15,11 +13,6 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         _orchestrator = new InstallerOrchestrator(_log);
-
-        var gifUri = new Uri("pack://application:,,,/Assets/QS_LOGO.gif", UriKind.Absolute);
-        AnimationBehavior.SetSourceUri(LogoImage, gifUri);
-        AnimationBehavior.SetRepeatBehavior(LogoImage, RepeatBehavior.Forever);
-
         VersionText.Text = "v" + AppVersion.Semantic;
     }
 
