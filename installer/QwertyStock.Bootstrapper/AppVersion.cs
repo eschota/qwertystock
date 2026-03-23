@@ -2,7 +2,7 @@ using System.Reflection;
 
 namespace QwertyStock.Bootstrapper;
 
-/// <summary>Единая точка для версии сборки (совпадает с &lt;Version&gt; в .csproj и self-update).</summary>
+/// <summary>Версия сборки exe; при релизе совпадает с <c>VERSION</c> в корне репозитория и с полем <c>version</c> в <c>installer/version.json</c>.</summary>
 public static class AppVersion
 {
     public static string Semantic

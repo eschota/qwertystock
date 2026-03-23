@@ -8,7 +8,13 @@ public static class InstallerPaths
 
     public static string LogsDir => Path.Combine(Root, "logs");
     public static string InstallerLog => Path.Combine(LogsDir, "installer.log");
+
+    /// <summary>Предыдущий сеанс (ротация при старте приложения).</summary>
+    public static string InstallerLogPrev => Path.Combine(LogsDir, "installer.log.prev");
     public static string ServerLog => Path.Combine(LogsDir, "server.log");
+
+    /// <summary>Предыдущий сеанс Python (ротация при каждом старте веб-сервера).</summary>
+    public static string ServerLogPrev => Path.Combine(LogsDir, "server.log.prev");
     public static string StatePath => Path.Combine(Root, "installer_state.json");
 
     /// <summary>Shared with FastAPI (env QS_DAEMON_SETTINGS_PATH): repo poll interval, etc.</summary>
@@ -25,7 +31,12 @@ public static class InstallerPaths
     public const string RepoRemoteUrl = "https://github.com/eschota/qwertystock.git";
     public const int ServerPort = 7332;
 
-    public static string LocalServerUrl => $"http://localhost:{ServerPort}/";
+    /// <summary>Корень HTTP (проверка «сервер поднялся»). Тот же UI, что и <see cref="LocalCabinetUrl"/>.</summary>
+    /// <remarks>Явный 127.0.0.1: на Windows «localhost» часто резолвится в ::1, а uvicorn по умолчанию слушает только IPv4 — тогда браузер даёт ERR_CONNECTION_REFUSED.</remarks>
+    public static string LocalServerUrl => $"http://127.0.0.1:{ServerPort}/";
+
+    /// <summary>Канонический путь после обновления <c>main.py</c>; инсталлер открывает <see cref="LocalServerUrl"/>.</summary>
+    public static string LocalCabinetUrl => $"http://127.0.0.1:{ServerPort}/cabinet";
 
     /// <summary>Embeddable Python 3.11.x Windows x86-64 (adjust when bumping runtime).</summary>
     public const string PythonEmbedZipUrl = "https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip";

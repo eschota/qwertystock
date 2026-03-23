@@ -8,6 +8,9 @@ public static class InstallerHttp
 {
     private static HttpClient? _client;
 
+    /// <summary>True after первого успешного <see cref="Initialize"/> — повторный выбор прокси в том же процессе не нужен.</summary>
+    public static bool IsInitialized => _client != null;
+
     public static HttpClient Client => _client ?? throw new InvalidOperationException("InstallerHttp.Initialize not called.");
 
     public static void Initialize(IWebProxy? proxy)

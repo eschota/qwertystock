@@ -6,6 +6,7 @@ __pycache__/
 # .NET bootstrapper build output
 installer/QwertyStock.Bootstrapper/bin/
 installer/QwertyStock.Bootstrapper/obj/
+installer/publish/
 
 # Production-only binary assets for the mirrored landing
 app/assets/fonts/*.woff2

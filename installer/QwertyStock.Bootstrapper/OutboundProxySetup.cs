@@ -3,20 +3,27 @@ using System.Net.Http;
 
 namespace QwertyStock.Bootstrapper;
 
-/// <summary>Probes direct connection, then HTTP proxies, then SOCKS5; configures <see cref="InstallerHttp"/> and <see cref="ProxySession"/>.</summary>
+/// <summary>
+/// Один раз за запуск: проверяет HTTPS до <see cref="InstallerPaths.DefaultManifestUrl"/> (обновления/манифест), не к python.org —
+/// встроенный Python уже в каталоге приложения.
+/// </summary>
 public static class OutboundProxySetup
 {
-    private static readonly Uri ProbeUri = new("https://www.python.org/");
+    private static readonly Uri ProbeUri = new(InstallerPaths.DefaultManifestUrl);
 
     public static async Task EnsureAsync(InstallerLogger log, CancellationToken ct)
     {
+        // Один раз за жизнь процесса: иначе каждый тик фона (~60 с) снова гонял бы пробу и шумел в лог.
+        if (InstallerHttp.IsInitialized)
+            return;
+
         var catalog = ProxyCatalog.Load();
 
         if (await ProbeAsync(null, log, "прямое подключение", ct).ConfigureAwait(false))
         {
             ProxySession.SetDirect();
             InstallerHttp.Initialize(null);
-            log.Info("Сеть: прямой доступ к https://www.python.org/ OK.");
+            log.Info($"Сеть: прямой доступ к {InstallerPaths.DefaultManifestUrl} OK.");
             return;
         }
 
@@ -29,7 +36,7 @@ public static class OutboundProxySetup
             return;
 
         throw new InvalidOperationException(
-            "Не удалось выйти в интернет: прямой доступ и все прокси из списка не прошли проверку (https://www.python.org/).");
+            $"Не удалось выйти в интернет: прямой доступ и все прокси из списка не прошли проверку ({InstallerPaths.DefaultManifestUrl}).");
     }
 
     private static async Task<bool> TryProxyListAsync(

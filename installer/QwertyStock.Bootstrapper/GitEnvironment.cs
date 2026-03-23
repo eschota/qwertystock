@@ -13,6 +13,10 @@ public static class GitEnvironment
         };
         foreach (var p in prepend.Where(Directory.Exists))
             path = p + Path.PathSeparator + path;
-        return new Dictionary<string, string> { ["PATH"] = path };
+        return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["PATH"] = path,
+            ["GIT_TERMINAL_PROMPT"] = "0",
+        };
     }
 }

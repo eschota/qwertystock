@@ -9,12 +9,14 @@ internal static class GitRepositoryHelper
             return null;
 
         var env = GitEnvironment.PathWithGit();
+        // Без таймаута rev-parse мог зависнуть (блокировка .git на Windows) и держать _syncGate вечно → минутные «skipped».
         var (code, stdout, _) = await ProcessRunner.RunAsync(
                 InstallerPaths.GitExe,
                 "rev-parse HEAD",
                 InstallerPaths.RepoDir,
                 env,
-                ct)
+                ct,
+                TimeSpan.FromSeconds(60))
             .ConfigureAwait(false);
         if (code != 0)
             return null;

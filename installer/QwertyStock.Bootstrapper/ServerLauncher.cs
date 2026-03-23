@@ -22,6 +22,7 @@ public sealed class ServerLauncher
     public Process Start(InstallerState state)
     {
         Directory.CreateDirectory(InstallerPaths.Root);
+        InstallerLogger.PrepareServerLogSession();
         var psi = new ProcessStartInfo
         {
             FileName = InstallerPaths.PythonExe,
@@ -34,6 +35,7 @@ public sealed class ServerLauncher
         };
         psi.Environment["PORT"] = InstallerPaths.ServerPort.ToString(CultureInfo.InvariantCulture);
         psi.Environment["QS_DAEMON_SETTINGS_PATH"] = InstallerPaths.DaemonSettingsPath;
+        psi.Environment["QS_PRODUCT_VERSION"] = ProductVersion.ReadFromRepoOrAssembly();
         var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
         if (!p.Start())
             throw new InvalidOperationException("Failed to start Python web server process.");
@@ -198,6 +200,7 @@ public sealed class ServerLauncher
 
     public static void OpenBrowser()
     {
+        // Только корень `/`: тот же HTML, что и `/cabinet`, но маршрут `/cabinet` появляется только после git sync нового main.py.
         Process.Start(new ProcessStartInfo
         {
             FileName = InstallerPaths.LocalServerUrl.TrimEnd('/'),

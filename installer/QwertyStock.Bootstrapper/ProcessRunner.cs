@@ -4,12 +4,14 @@ namespace QwertyStock.Bootstrapper;
 
 public static class ProcessRunner
 {
+    /// <param name="killAfter">Если процесс не завершился за это время — Kill(entireProcessTree) и <see cref="TimeoutException"/>.</param>
     public static async Task<(int ExitCode, string StdOut, string StdErr)> RunAsync(
         string fileName,
         string arguments,
         string? workingDirectory,
         IReadOnlyDictionary<string, string>? extraEnvironment,
-        CancellationToken ct)
+        CancellationToken ct,
+        TimeSpan? killAfter = null)
     {
         var psi = new ProcessStartInfo(fileName, arguments)
         {
@@ -28,9 +30,40 @@ public static class ProcessRunner
         using var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
         if (!p.Start())
             throw new InvalidOperationException($"Failed to start process: {fileName}");
-        await p.WaitForExitAsync(ct).ConfigureAwait(false);
-        var stdout = await p.StandardOutput.ReadToEndAsync(ct).ConfigureAwait(false);
-        var stderr = await p.StandardError.ReadToEndAsync(ct).ConfigureAwait(false);
+
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        if (killAfter is { } t)
+            linkedCts.CancelAfter(t);
+
+        // Читать stdout/stderr без отмены по токауту — иначе ReadToEnd обрывается до слива буфера.
+        var stdoutTask = p.StandardOutput.ReadToEndAsync(CancellationToken.None);
+        var stderrTask = p.StandardError.ReadToEndAsync(CancellationToken.None);
+        try
+        {
+            await p.WaitForExitAsync(linkedCts.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException ex)
+        {
+            TryKillProcessTree(p);
+            try
+            {
+                await Task.WhenAll(stdoutTask, stderrTask).ConfigureAwait(false);
+            }
+            catch
+            {
+                // ignore drain errors after kill
+            }
+
+            if (ct.IsCancellationRequested)
+                throw;
+
+            throw new TimeoutException(
+                $"Process exceeded {(killAfter?.ToString() ?? "timeout")}: {fileName} {arguments}",
+                ex);
+        }
+
+        var stdout = await stdoutTask.ConfigureAwait(false);
+        var stderr = await stderrTask.ConfigureAwait(false);
         return (p.ExitCode, stdout, stderr);
     }
 
@@ -41,7 +74,8 @@ public static class ProcessRunner
         string? workingDirectory,
         IReadOnlyDictionary<string, string>? extraEnvironment,
         Action<string> onStderrLine,
-        CancellationToken ct)
+        CancellationToken ct,
+        TimeSpan? killAfter = null)
     {
         var psi = new ProcessStartInfo(fileName, arguments)
         {
@@ -61,11 +95,53 @@ public static class ProcessRunner
         if (!p.Start())
             throw new InvalidOperationException($"Failed to start process: {fileName}");
 
-        var stderrTask = ReadLinesAsync(p.StandardError, onStderrLine, ct);
-        var stdoutTask = p.StandardOutput.ReadToEndAsync(ct);
-        await p.WaitForExitAsync(ct).ConfigureAwait(false);
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        if (killAfter is { } t)
+            linkedCts.CancelAfter(t);
+
+        var stderrTask = ReadLinesAsync(p.StandardError, onStderrLine, linkedCts.Token);
+        var stdoutTask = p.StandardOutput.ReadToEndAsync(CancellationToken.None);
+        try
+        {
+            await p.WaitForExitAsync(linkedCts.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException ex)
+        {
+            TryKillProcessTree(p);
+            try
+            {
+                await Task.WhenAll(stderrTask, stdoutTask).ConfigureAwait(false);
+            }
+            catch
+            {
+                // ignore
+            }
+
+            if (ct.IsCancellationRequested)
+                throw;
+
+            throw new TimeoutException(
+                $"Process exceeded {(killAfter?.ToString() ?? "timeout")}: {fileName} {arguments}",
+                ex);
+        }
+
         await Task.WhenAll(stderrTask, stdoutTask).ConfigureAwait(false);
         return p.ExitCode;
+    }
+
+    private static void TryKillProcessTree(Process p)
+    {
+        try
+        {
+            if (p.HasExited)
+                return;
+            p.Kill(entireProcessTree: true);
+            p.WaitForExit(8000);
+        }
+        catch
+        {
+            // best effort
+        }
     }
 
     private static async Task ReadLinesAsync(

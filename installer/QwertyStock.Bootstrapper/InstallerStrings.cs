@@ -119,8 +119,8 @@ public static class InstallerStrings
 
     public static string ProgressWaitHttp =>
         IsRu
-            ? $"Ожидание ответа сервера на http://localhost:{InstallerPaths.ServerPort} … Первый запуск может занять минуту."
-            : $"Waiting for the server at http://localhost:{InstallerPaths.ServerPort} … First start can take up to a minute.";
+            ? $"Ожидание ответа сервера на http://127.0.0.1:{InstallerPaths.ServerPort} … Первый запуск может занять минуту."
+            : $"Waiting for the server at http://127.0.0.1:{InstallerPaths.ServerPort} … First start can take up to a minute.";
 
     public static string ProgressBrowser => IsRu ? "Открытие браузера…" : "Opening browser…";
 
@@ -174,14 +174,47 @@ public static class InstallerStrings
             ? "Не удалось полностью удалить папку данных: {0}"
             : "Could not fully delete the data folder: {0}";
 
-    public static string TrayTooltip =>
-        IsRu ? "QwertyStock — локальный кабинет" : "QwertyStock — local cabinet";
+    public static string TrayTooltipFormat(string productVersion) =>
+        IsRu
+            ? $"QwertyStock {productVersion} — локальный кабинет"
+            : $"QwertyStock {productVersion} — local cabinet";
 
     public static string TrayOpenCabinet =>
         IsRu ? "Открыть кабинет" : "Open cabinet";
 
     public static string TrayForceUpdate =>
         IsRu ? "Принудительно обновить репозиторий" : "Update repository now";
+
+    public static string TrayBalloonTitle => "QwertyStock";
+
+    public static string TrayForceUpdateStartedBody =>
+        IsRu
+            ? "Синхронизация с git (fetch, reset, pip)…"
+            : "Syncing with git (fetch, reset, pip)…";
+
+    public static string TrayForceUpdateAlreadyCurrentBody =>
+        IsRu
+            ? "Репозиторий уже актуален — новых коммитов нет. Сервер не перезапускался."
+            : "Repository is already up to date. Server was not restarted.";
+
+    public static string TrayForceUpdateUpdatedBody =>
+        IsRu
+            ? "Есть изменения: код или зависимости обновлены, сервер кабинета перезапущен."
+            : "Updates applied (code or dependencies); cabinet server restarted.";
+
+    public static string TrayForceUpdateErrorTitle =>
+        IsRu ? "Синхронизация не удалась" : "Sync failed";
+
+    /// <summary>Фоновый sync завис или не отменился: не удалось взять lock за отведённое время.</summary>
+    public static string TrayForceUpdateLockWaitTimeoutBody =>
+        IsRu
+            ? "Фоновая синхронизация не завершилась за 2 мин после отмены. Перезапустите QwertyStock."
+            : "Background sync did not finish within 2 minutes after cancel. Restart QwertyStock.";
+
+    public static string TrayForceUpdateCancelledOrTimeoutBody =>
+        IsRu
+            ? "Синхронизация остановлена по таймауту (45 мин) или отменена."
+            : "Sync stopped (45 min timeout) or was cancelled.";
 
     public static string TrayExit =>
         IsRu ? "Выйти" : "Exit";

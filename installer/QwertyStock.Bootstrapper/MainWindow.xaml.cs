@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -38,7 +39,8 @@ public partial class MainWindow : Window
     {
         if (e.LeftButton != MouseButtonState.Pressed)
             return;
-        if (IsDescendantOfCloseButton(e.OriginalSource as DependencyObject))
+        // Не вызывать DragMove поверх кнопок и панели ошибки — иначе клики не доходят до Open logs / Close.
+        if (ShouldSkipDragMove(e))
             return;
         try
         {
@@ -50,13 +52,14 @@ public partial class MainWindow : Window
         }
     }
 
-    private bool IsDescendantOfCloseButton(DependencyObject? source)
+    private bool ShouldSkipDragMove(MouseButtonEventArgs e)
     {
-        while (source != null)
+        for (var source = e.OriginalSource as DependencyObject; source != null; source = VisualTreeHelper.GetParent(source))
         {
-            if (ReferenceEquals(source, CloseButton))
+            if (source is Button)
                 return true;
-            source = VisualTreeHelper.GetParent(source);
+            if (ReferenceEquals(source, ErrorOverlay))
+                return true;
         }
 
         return false;
@@ -132,7 +135,9 @@ public partial class MainWindow : Window
             var x = Math.Clamp(p.Percent, 0, 100);
             PercentText.Text = x >= 100
                 ? "100%"
-                : string.Format(CultureInfo.InvariantCulture, "{0:0.#}%", x);
+                : x < 15
+                    ? string.Format(CultureInfo.InvariantCulture, "{0:0.##}%", x)
+                    : string.Format(CultureInfo.InvariantCulture, "{0:0.#}%", x);
         }
 
         StatsText.Text = FormatStatsLine(p);

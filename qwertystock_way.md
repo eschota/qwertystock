@@ -2,6 +2,8 @@
 
 Единая точка входа: `qwertystock_way.py` — HTTP-сервер (health, вебхук GitHub), настройки в `qwertystock_way.json`.
 
+**Деплой инсталлера, `version.json` и зеркал на way:** [docs/DEPLOY.md](docs/DEPLOY.md).
+
 ## Конфигурация (`qwertystock_way.json`)
 
 | Раздел | Поля |

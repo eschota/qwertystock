@@ -25,7 +25,7 @@ public sealed class InstallerOrchestrator
     public ServerLauncher ServerLauncher => _server;
 
     /// <summary>
-    /// Logon / <c>--startup</c> path: manifest (no exe self-update), then open cabinet if install is complete; otherwise full UI.
+    /// Logon / <c>--startup</c> path: manifest + self-update exe if newer, then open cabinet if install is complete; otherwise full UI.
     /// </summary>
     public async Task<StartupLaunchResult> RunStartupLaunchAsync(CancellationToken ct)
     {
@@ -35,7 +35,8 @@ public sealed class InstallerOrchestrator
         Directory.CreateDirectory(InstallerPaths.Root);
         Directory.CreateDirectory(InstallerPaths.LogsDir);
 
-        await LoadManifestAsync(false, null, null, ct).ConfigureAwait(false);
+        // Тот же манифест, что и у фонового демона: при новой сборке exe — скачивание и перезапуск до открытия кабинета.
+        await LoadManifestAsync(true, null, null, ct).ConfigureAwait(false);
 
         var state = _store.LoadOrCreate();
         if (!await CanQuickLaunchCabinetAsync(state, ct).ConfigureAwait(false))
@@ -86,13 +87,14 @@ public sealed class InstallerOrchestrator
             var ui = progress;
             selfDl = new Progress<TransferProgress>(tp =>
             {
-                var frac = tp.TotalBytes is > 0 ? tp.BytesReceived / (double)tp.TotalBytes.Value : 0;
+                var hasTotal = tp.TotalBytes is > 0;
+                var frac = hasTotal ? tp.BytesReceived / (double)tp.TotalBytes!.Value : 0;
                 var pct = ProgressSegments.SelfUpdateStart +
                           (ProgressSegments.SelfUpdateEnd - ProgressSegments.SelfUpdateStart) * frac;
                 ui.Report(new InstallProgress(
                     pct,
                     InstallerStrings.ProgressSelfUpdate,
-                    false,
+                    Indeterminate: !hasTotal,
                     null,
                     TransferProgressFormatter.FormatSpeed(tp.BytesPerSecond),
                     TransferProgressFormatter.FormatEta(tp.EtaSeconds),
@@ -162,22 +164,42 @@ public sealed class InstallerOrchestrator
     }
 
     /// <summary>
-    /// Background git sync + pip. Returns true if the FastAPI process should be restarted (repo or deps changed).
+    /// Self-update exe (если на way выложена новая сборка) + git sync + pip.
+    /// Returns true if the FastAPI process should be restarted (repo or deps changed).
     /// </summary>
     public async Task<bool> BackgroundSyncRepositoryAsync(CancellationToken ct)
     {
+        _log.Info("Background sync: outbound network…");
         await OutboundProxySetup.EnsureAsync(_log, ct).ConfigureAwait(false);
         var state = _store.LoadOrCreate();
         var manifestUrl = string.IsNullOrWhiteSpace(state.UpdateManifestUrl)
             ? InstallerPaths.DefaultManifestUrl
             : state.UpdateManifestUrl!;
-        var manifest = await InstallerManifestFetcher.FetchAsync(manifestUrl, ct).ConfigureAwait(false);
+        _log.Info("Background sync: fetching manifest…");
+        using var manifestDeadline = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        manifestDeadline.CancelAfter(TimeSpan.FromMinutes(3));
+        var manifest = await InstallerManifestFetcher.FetchAsync(manifestUrl, manifestDeadline.Token).ConfigureAwait(false);
+        _log.Info($"Update manifest: version {manifest.Version.Trim()} (exe {AppVersion.Semantic}, source {manifestUrl}).");
 
+        try
+        {
+            _log.Info("Self-update: checking manifest for newer qwertystock.exe…");
+            await _selfUpdate.ApplyIfNewerAsync(manifest, null, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            // Не блокируем git/pip: кабинет должен обновляться даже при сбое CDN или неверном sha256 у exe.
+            _log.Error("Self-update failed (continuing with repository sync)", ex);
+        }
+
+        _log.Info("Background sync: reading HEAD (before git)…");
         var headBefore = await GitRepositoryHelper.ReadHeadAsync(ct).ConfigureAwait(false);
         var repoRemote = RuntimeAssetUrls.RepoRemoteUrl(manifest);
+        _log.Info("Background sync: git (fetch/reset/clean)…");
         await _repo.SyncAsync(state.GitBranch, repoRemote, null, ct).ConfigureAwait(false);
         _store.Save(state);
 
+        _log.Info("Background sync: reading HEAD (after git)…");
         var headAfter = await GitRepositoryHelper.ReadHeadAsync(ct).ConfigureAwait(false);
         var headChanged = !string.Equals(headBefore, headAfter, StringComparison.Ordinal);
 
@@ -190,8 +212,13 @@ public sealed class InstallerOrchestrator
         var requirementsMismatch = string.IsNullOrWhiteSpace(state.RequirementsTxtSha256)
                                    || !HttpHash.EqualsHex(state.RequirementsTxtSha256, reqHash);
 
+        // After a new commit, always re-run pip so the embed env picks up the current
+        // qwertystock_web_server/requirements.txt even if a previous run skipped or failed.
+        var forcePip = headChanged || requirementsMismatch;
+
         var pipIndex = string.IsNullOrWhiteSpace(manifest.PipIndexUrl) ? null : manifest.PipIndexUrl.Trim();
-        await _pip.InstallIfNeededAsync(state, null, pipIndex, ct).ConfigureAwait(false);
+        _log.Info("Background sync: pip (if needed)…");
+        await _pip.InstallIfNeededAsync(state, null, pipIndex, ct, forcePip).ConfigureAwait(false);
         _store.Save(state);
 
         return headChanged || requirementsMismatch;
@@ -211,6 +238,7 @@ public sealed class InstallerOrchestrator
             : state.UpdateManifestUrl!;
         progress?.Report(new InstallProgress(ProgressSegments.NetworkEnd + 0.5, InstallerStrings.ProgressManifest, false));
         var manifest = await InstallerManifestFetcher.FetchAsync(manifestUrl, ct).ConfigureAwait(false);
+        _log.Info($"Update manifest: version {manifest.Version.Trim()} (exe {AppVersion.Semantic}, source {manifestUrl}).");
         if (applySelfUpdateExe)
             await _selfUpdate.ApplyIfNewerAsync(manifest, selfDl, ct).ConfigureAwait(false);
         return manifest;
@@ -235,21 +263,29 @@ public sealed class InstallerOrchestrator
         return HttpHash.EqualsHex(state.RequirementsTxtSha256, hash);
     }
 
-    /// <summary>Kills the process listening on <see cref="InstallerPaths.ServerPort"/> if the port is still busy.</summary>
+    /// <summary>Kills processes listening on <see cref="InstallerPaths.ServerPort"/> (server.pid + все LISTEN).</summary>
     private async Task EnsurePortFreeAsync(IProgress<InstallProgress>? progress, CancellationToken ct)
     {
         if (!await PortChecker.IsLocalPortInUseAsync(InstallerPaths.ServerPort, ct).ConfigureAwait(false))
             return;
 
         progress?.Report(new InstallProgress(ProgressSegments.PortEnd, InstallerStrings.ProgressPortFreeing, false));
-        _log.Info($"Port {InstallerPaths.ServerPort} is in use — attempting to terminate the owning process.");
-        PortProcessTerminator.TryKillProcessUsingPort(InstallerPaths.ServerPort, _log);
-        await Task.Delay(750, ct).ConfigureAwait(false);
-        for (var i = 0; i < 25; i++)
+        _log.Info($"Port {InstallerPaths.ServerPort} is in use — stopping previous cabinet server and freeing the port.");
+
+        for (var round = 0; round < 3; round++)
+        {
+            PortProcessTerminator.TryKillPythonServerFromPidFile(_log);
+            PortProcessTerminator.TryKillProcessUsingPort(InstallerPaths.ServerPort, _log);
+            await Task.Delay(900 + round * 400, ct).ConfigureAwait(false);
+            if (!await PortChecker.IsLocalPortInUseAsync(InstallerPaths.ServerPort, ct).ConfigureAwait(false))
+                return;
+        }
+
+        for (var i = 0; i < 30; i++)
         {
             if (!await PortChecker.IsLocalPortInUseAsync(InstallerPaths.ServerPort, ct).ConfigureAwait(false))
                 return;
-            await Task.Delay(150, ct).ConfigureAwait(false);
+            await Task.Delay(200, ct).ConfigureAwait(false);
         }
 
         if (await PortChecker.IsLocalPortInUseAsync(InstallerPaths.ServerPort, ct).ConfigureAwait(false))

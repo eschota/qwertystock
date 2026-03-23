@@ -20,7 +20,8 @@ public static class UninstallService
 
         WindowsStartup.Unregister();
         StartMenuShortcut.TryRemove();
-        TryKillServerFromPidFile();
+        PortProcessTerminator.TryKillPythonServerFromPidFile();
+        TryDeleteServerPidFile();
         TryDeleteDataRoot();
 
         System.Windows.MessageBox.Show(
@@ -30,32 +31,12 @@ public static class UninstallService
             MessageBoxImage.Information);
     }
 
-    private static void TryKillServerFromPidFile()
+    private static void TryDeleteServerPidFile()
     {
-        if (!File.Exists(PidPath))
-            return;
         try
         {
-            var text = File.ReadAllText(PidPath).Trim();
-            if (!int.TryParse(text, out var pid))
-                return;
-            using var p = Process.GetProcessById(pid);
-            var path = p.MainModule?.FileName;
-            if (path != null
-                && path.Equals(InstallerPaths.PythonExe, StringComparison.OrdinalIgnoreCase))
-            {
-                p.Kill(entireProcessTree: true);
-                p.WaitForExit(5000);
-            }
-        }
-        catch
-        {
-            // ignore
-        }
-
-        try
-        {
-            File.Delete(PidPath);
+            if (File.Exists(PidPath))
+                File.Delete(PidPath);
         }
         catch
         {

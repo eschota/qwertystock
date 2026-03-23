@@ -1,56 +1,109 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 
 namespace QwertyStock.Bootstrapper;
 
-/// <summary>Windows: find which process is listening on a TCP port and terminate it.</summary>
+/// <summary>Windows: find processes listening on a TCP port and terminate them; optional kill via server.pid.</summary>
 public static class PortProcessTerminator
 {
-    /// <summary>Returns true if a process was killed or port appears free afterward.</summary>
+    private static readonly string ServerPidPath = Path.Combine(InstallerPaths.Root, "server.pid");
+
+    /// <summary>Kills every non-system process found listening on <paramref name="port"/>.</summary>
     public static bool TryKillProcessUsingPort(int port, InstallerLogger log)
     {
         if (!OperatingSystem.IsWindows())
             return false;
 
-        var pid = TryFindListeningPid(port);
-        if (pid is null)
+        var pids = CollectListeningPids(port);
+        if (pids.Count == 0)
         {
             log.Info($"Port {port}: could not resolve owning PID (port may clear on its own).");
             return false;
         }
 
-        if (pid is 0 or 4)
+        var any = false;
+        foreach (var pid in pids)
         {
-            log.Info($"Port {port}: owning PID {pid} is a system process — not terminating.");
-            return false;
+            if (pid is 0 or 4)
+            {
+                log.Info($"Port {port}: skip system PID {pid}.");
+                continue;
+            }
+
+            try
+            {
+                using var p = Process.GetProcessById(pid);
+                var name = p.ProcessName;
+                log.Info($"Port {port}: terminating PID {pid} ({name}) to free the port.");
+                p.Kill(entireProcessTree: true);
+                p.WaitForExit(8000);
+                any = true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Port {port}: failed to terminate PID {pid}", ex);
+            }
         }
+
+        return any;
+    }
+
+    /// <summary>
+    /// Завершает embed-python из <c>server.pid</c>, если путь к процессу совпадает с рантаймом — надёжно при сбое Get-NetTCPConnection.
+    /// </summary>
+    /// <param name="log">Опционально; без логгера вызывать можно из деинсталлятора.</param>
+    public static bool TryKillPythonServerFromPidFile(InstallerLogger? log = null)
+    {
+        if (!OperatingSystem.IsWindows() || !File.Exists(ServerPidPath))
+            return false;
 
         try
         {
-            using var p = Process.GetProcessById(pid.Value);
-            var name = p.ProcessName;
-            log.Info($"Port {port}: terminating PID {pid} ({name}) to free the port.");
+            var text = File.ReadAllText(ServerPidPath).Trim();
+            if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var pid))
+                return false;
+
+            using var p = Process.GetProcessById(pid);
+            var path = p.MainModule?.FileName;
+            if (path == null
+                || !path.Equals(InstallerPaths.PythonExe, StringComparison.OrdinalIgnoreCase))
+            {
+                log?.Info($"server.pid PID {pid} is not embed python — skipping.");
+                return false;
+            }
+
+            log?.Info($"Terminating Python server from server.pid (PID {pid}) to free the cabinet port.");
             p.Kill(entireProcessTree: true);
             p.WaitForExit(8000);
             return true;
         }
         catch (Exception ex)
         {
-            log.Error($"Port {port}: failed to terminate PID {pid}", ex);
+            log?.Info($"server.pid kill: {ex.Message}");
             return false;
         }
     }
 
     internal static int? TryFindListeningPid(int port)
     {
-        var fromPs = TryFindPidViaPowerShell(port);
-        if (fromPs.HasValue)
-            return fromPs;
-        return TryFindPidViaNetstat(port);
+        var list = CollectListeningPids(port);
+        return list.Count > 0 ? list[0] : null;
     }
 
-    private static int? TryFindPidViaPowerShell(int port)
+    private static List<int> CollectListeningPids(int port)
     {
+        var set = new HashSet<int>();
+        foreach (var pid in TryFindPidsViaPowerShell(port))
+            set.Add(pid);
+        foreach (var pid in TryFindPidsViaNetstat(port))
+            set.Add(pid);
+        return set.OrderBy(x => x).ToList();
+    }
+
+    private static List<int> TryFindPidsViaPowerShell(int port)
+    {
+        var list = new List<int>();
         try
         {
             using var p = new Process
@@ -70,23 +123,31 @@ public static class PortProcessTerminator
             p.StartInfo.ArgumentList.Add("Bypass");
             p.StartInfo.ArgumentList.Add("-Command");
             p.StartInfo.ArgumentList.Add(
-                $"(Get-NetTCPConnection -LocalPort {port.ToString(CultureInfo.InvariantCulture)} -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess)");
+                $"Get-NetTCPConnection -LocalPort {port.ToString(CultureInfo.InvariantCulture)} -State Listen -ErrorAction SilentlyContinue " +
+                "| ForEach-Object { $_.OwningProcess } | Sort-Object -Unique");
             p.Start();
             var stdout = p.StandardOutput.ReadToEnd();
             p.WaitForExit(15000);
-            var t = stdout.Trim();
-            if (string.IsNullOrEmpty(t) || !int.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out var pid))
-                return null;
-            return pid;
+            foreach (var line in stdout.Split('\n'))
+            {
+                var t = line.Trim().TrimEnd('\r');
+                if (t.Length == 0)
+                    continue;
+                if (int.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out var pid) && pid > 0)
+                    list.Add(pid);
+            }
         }
         catch
         {
-            return null;
+            // ignore
         }
+
+        return list;
     }
 
-    private static int? TryFindPidViaNetstat(int port)
+    private static List<int> TryFindPidsViaNetstat(int port)
     {
+        var list = new List<int>();
         try
         {
             using var p = new Process
@@ -124,7 +185,7 @@ public static class PortProcessTerminator
                     continue;
                 if (pid <= 0)
                     continue;
-                return pid;
+                list.Add(pid);
             }
         }
         catch
@@ -132,6 +193,6 @@ public static class PortProcessTerminator
             // ignore
         }
 
-        return null;
+        return list;
     }
 }

@@ -13,11 +13,16 @@ public sealed class PipInstallService
         _log = log;
     }
 
+    /// <param name="force">
+    /// When true, runs <c>pip install -r requirements.txt</c> even if the saved hash matches
+    /// (e.g. after <c>git pull</c> changed code — re-syncs the venv with the pinned list).
+    /// </param>
     public async Task InstallIfNeededAsync(
         InstallerState state,
         IProgress<PipSubProgress>? pipProgress,
         string? pipIndexUrl,
-        CancellationToken ct)
+        CancellationToken ct,
+        bool force = false)
     {
         var req = Path.Combine(InstallerPaths.WebServerDir, "requirements.txt");
         if (!File.Exists(req))
@@ -27,8 +32,13 @@ public sealed class PipInstallService
         var hash = HttpHash.Sha256Hex(bytes);
         if (state.RequirementsTxtSha256 == hash)
         {
-            _log.Info("requirements.txt hash unchanged — skipping pip install.");
-            return;
+            if (!force)
+            {
+                _log.Info("requirements.txt hash unchanged — skipping pip install.");
+                return;
+            }
+
+            _log.Info("requirements.txt hash unchanged — running pip install anyway (forced dependency sync).");
         }
 
         var reqLines = await File.ReadAllLinesAsync(req, ct).ConfigureAwait(false);

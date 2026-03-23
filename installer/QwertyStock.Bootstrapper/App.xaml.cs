@@ -9,6 +9,7 @@ public partial class App : System.Windows.Application
     protected override void OnStartup(StartupEventArgs e)
     {
         InstallerLocale.Initialize(e.Args);
+        InstallerLogger.PrepareNewSession();
         var args = new HashSet<string>(
             e.Args.Select(a => a.Trim()),
             StringComparer.OrdinalIgnoreCase);

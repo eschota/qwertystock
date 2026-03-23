@@ -27,14 +27,23 @@ EOF
 WWW="${INSTALLER_WWW:-/var/www/installer}"
 echo "Wrote installer/version.json (version ${VER}, sha256 ${HASH})"
 echo "If you use CDN mirrors, refresh files: sudo INSTALLER_WWW=$WWW $ROOT/scripts/sync_installer_mirrors_to_www.sh"
-if [[ -d "$(dirname "$WWW")" ]] && [[ -w "$(dirname "$WWW")" || "$(id -u)" -eq 0 ]]; then
-  mkdir -p "$WWW"
-  cp -f "$EXE" "$WWW/qwertystock.exe"
-  cp -f "$EXE" "$WWW/qwertystock-en.exe"
-  cp -f "$EXE" "$WWW/qwertystock-ru.exe"
-  cp -f "$ROOT/installer/version.json" "$WWW/version.json"
-  echo "Copied to $WWW/ (qwertystock.exe + qwertystock-en.exe + qwertystock-ru.exe)"
-else
-  echo "Install to web root (requires sudo):"
-  echo "  sudo mkdir -p $WWW && sudo cp -f \"$EXE\" $WWW/qwertystock.exe && sudo cp -f \"$EXE\" $WWW/qwertystock-en.exe && sudo cp -f \"$EXE\" $WWW/qwertystock-ru.exe && sudo cp -f \"$ROOT/installer/version.json\" $WWW/version.json"
+
+www_cp() {
+  local src="$1" dst="$2"
+  if cp -f "$src" "$dst" 2>/dev/null; then
+    return 0
+  fi
+  sudo cp -f "$src" "$dst"
+}
+
+if [[ ! -d "$(dirname "$WWW")" ]]; then
+  echo "Parent of INSTALLER_WWW does not exist: $(dirname "$WWW")"
+  exit 1
 fi
+
+mkdir -p "$WWW" 2>/dev/null || sudo mkdir -p "$WWW"
+www_cp "$EXE" "$WWW/qwertystock.exe"
+www_cp "$EXE" "$WWW/qwertystock-en.exe"
+www_cp "$EXE" "$WWW/qwertystock-ru.exe"
+www_cp "$ROOT/installer/version.json" "$WWW/version.json"
+echo "Copied to $WWW/ (qwertystock.exe + qwertystock-en.exe + qwertystock-ru.exe + version.json)"

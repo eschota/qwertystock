@@ -8,6 +8,9 @@ public sealed class RepositorySyncService
         @"(Receiving objects|Resolving deltas|Writing objects|Compressing objects):\s+(\d+)%",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+    /// <summary>Один git-пайплайн на репозиторий: установщик и фоновый трей не держат два fetch одновременно.</summary>
+    private static readonly SemaphoreSlim RepoSyncGate = new(1, 1);
+
     private readonly InstallerLogger _log;
 
     public RepositorySyncService(InstallerLogger log)
@@ -16,6 +19,23 @@ public sealed class RepositorySyncService
     }
 
     public async Task SyncAsync(string branch, string repoRemoteUrl, IProgress<InstallProgress>? ui, CancellationToken ct)
+    {
+        _log.Info("git: waiting for repo sync lock…");
+        await RepoSyncGate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            _log.Info("git: repo sync lock acquired — running fetch/reset/clean.");
+            await SyncCoreAsync(branch, repoRemoteUrl, ui, ct).ConfigureAwait(false);
+        }
+        finally
+        {
+            RepoSyncGate.Release();
+            _log.Info("git: repo sync lock released.");
+        }
+    }
+
+    /// <summary>Внутренний синк без повторного захвата замка (см. <see cref="ResetRepoAndCloneAsync"/>).</summary>
+    private async Task SyncCoreAsync(string branch, string repoRemoteUrl, IProgress<InstallProgress>? ui, CancellationToken ct)
     {
         var git = InstallerPaths.GitExe;
         var pfx = ProxySession.GitProxyPrefix();
@@ -29,7 +49,8 @@ public sealed class RepositorySyncService
                     $"{pfx}remote set-url origin \"{repoRemoteUrl}\"",
                     InstallerPaths.RepoDir,
                     env,
-                    ct)
+                    ct,
+                    TimeSpan.FromMinutes(2))
                 .ConfigureAwait(false);
             if (setUrl.ExitCode != 0)
                 throw new InvalidOperationException($"git remote set-url failed ({setUrl.ExitCode}): {setUrl.StdErr}");
@@ -55,7 +76,8 @@ public sealed class RepositorySyncService
                     _log.Info($"git: {line}");
                     ReportRepoLine(ui, line);
                 },
-                ct).ConfigureAwait(false);
+                ct,
+                TimeSpan.FromMinutes(45)).ConfigureAwait(false);
             if (exit != 0)
                 throw new InvalidOperationException($"git clone failed ({exit}). See installer.log.");
             ReportRepo(ui, ProgressSegments.RepoEnd, InstallerStrings.ProgressRepo, line: null);
@@ -64,8 +86,16 @@ public sealed class RepositorySyncService
 
         ReportRepo(ui, ProgressSegments.RepoStart + (ProgressSegments.RepoEnd - ProgressSegments.RepoStart) * 0.15,
             InstallerStrings.ProgressRepo, "git fetch…");
-        var fetch = await ProcessRunner.RunAsync(git, $"{pfx}fetch origin", InstallerPaths.RepoDir, env, ct)
+        _log.Info("git: fetch origin starting…");
+        var fetch = await ProcessRunner.RunAsync(
+                git,
+                $"{pfx}fetch origin",
+                InstallerPaths.RepoDir,
+                env,
+                ct,
+                TimeSpan.FromMinutes(15))
             .ConfigureAwait(false);
+        _log.Info($"git: fetch origin finished (exit {fetch.ExitCode}).");
         if (fetch.ExitCode != 0)
         {
             _log.Error($"git fetch failed: {fetch.StdErr}");
@@ -75,13 +105,16 @@ public sealed class RepositorySyncService
 
         ReportRepo(ui, ProgressSegments.RepoStart + (ProgressSegments.RepoEnd - ProgressSegments.RepoStart) * 0.45,
             InstallerStrings.ProgressRepo, "git reset…");
+        _log.Info($"git: reset --hard origin/{branch} starting…");
         var reset = await ProcessRunner.RunAsync(
                 git,
                 $"{pfx}reset --hard origin/{branch}",
                 InstallerPaths.RepoDir,
                 env,
-                ct)
+                ct,
+                TimeSpan.FromMinutes(10))
             .ConfigureAwait(false);
+        _log.Info($"git: reset finished (exit {reset.ExitCode}).");
         if (reset.ExitCode != 0)
         {
             _log.Error($"git reset failed: {reset.StdErr}");
@@ -91,8 +124,16 @@ public sealed class RepositorySyncService
 
         ReportRepo(ui, ProgressSegments.RepoStart + (ProgressSegments.RepoEnd - ProgressSegments.RepoStart) * 0.75,
             InstallerStrings.ProgressRepo, "git clean…");
-        var clean = await ProcessRunner.RunAsync(git, $"{pfx}clean -fd", InstallerPaths.RepoDir, env, ct)
+        _log.Info("git: clean -fd starting…");
+        var clean = await ProcessRunner.RunAsync(
+                git,
+                $"{pfx}clean -fd",
+                InstallerPaths.RepoDir,
+                env,
+                ct,
+                TimeSpan.FromMinutes(5))
             .ConfigureAwait(false);
+        _log.Info($"git: clean finished (exit {clean.ExitCode}).");
         if (clean.ExitCode != 0)
             throw new InvalidOperationException($"git clean failed ({clean.ExitCode}): {clean.StdErr}");
 
@@ -135,6 +176,6 @@ public sealed class RepositorySyncService
         _log.Info("Deleting repo and cloning fresh…");
         if (Directory.Exists(InstallerPaths.RepoDir))
             Directory.Delete(InstallerPaths.RepoDir, true);
-        await SyncAsync(branch, repoRemoteUrl, ui, ct).ConfigureAwait(false);
+        await SyncCoreAsync(branch, repoRemoteUrl, ui, ct).ConfigureAwait(false);
     }
 }
