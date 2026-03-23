@@ -22,16 +22,16 @@ public sealed class InstallerOrchestrator
         _server = new ServerLauncher(log);
     }
 
-    public async Task RunAsync(IProgress<(int percent, string message)> progress, CancellationToken ct)
+    public async Task RunAsync(IProgress<InstallProgress> progress, CancellationToken ct)
     {
         if (!OperatingSystem.IsWindows())
-            throw new PlatformNotSupportedException("Этот установщик работает только в Windows.");
+            throw new PlatformNotSupportedException(InstallerStrings.ErrorWindowsOnly);
 
-        progress.Report((2, "Подготовка…"));
+        progress.Report(new InstallProgress(2, InstallerStrings.ProgressPreparing, Indeterminate: false));
         Directory.CreateDirectory(InstallerPaths.Root);
         Directory.CreateDirectory(InstallerPaths.LogsDir);
 
-        progress.Report((4, "Проверка сети и прокси…"));
+        progress.Report(new InstallProgress(4, InstallerStrings.ProgressNetwork, Indeterminate: false));
         await OutboundProxySetup.EnsureAsync(_log, ct).ConfigureAwait(false);
 
         var state = _store.LoadOrCreate();
@@ -39,44 +39,38 @@ public sealed class InstallerOrchestrator
             ? InstallerPaths.DefaultManifestUrl
             : state.UpdateManifestUrl!;
 
-        progress.Report((5, "Проверка обновлений установщика…"));
+        progress.Report(new InstallProgress(5, InstallerStrings.ProgressSelfUpdate, Indeterminate: true));
         await _selfUpdate.ApplyIfNewerAsync(manifestUrl, ct).ConfigureAwait(false);
 
-        progress.Report((15, "Установка встроенного Python…"));
-        await _python.EnsureAsync(state, ct).ConfigureAwait(false);
+        progress.Report(new InstallProgress(18, InstallerStrings.ProgressPythonGit, Indeterminate: true));
+        await Task.WhenAll(_python.EnsureAsync(state, ct), _git.EnsureAsync(state, ct)).ConfigureAwait(false);
         _store.Save(state);
 
-        progress.Report((30, "Установка portable Git…"));
-        await _git.EnsureAsync(state, ct).ConfigureAwait(false);
-        _store.Save(state);
-
-        progress.Report((45, "Синхронизация репозитория…"));
+        progress.Report(new InstallProgress(45, InstallerStrings.ProgressRepo, Indeterminate: true));
         await _repo.SyncAsync(state.GitBranch, ct).ConfigureAwait(false);
 
         if (!Directory.Exists(InstallerPaths.WebServerDir))
-            throw new InvalidOperationException(
-                "В репозитории нет папки qwertystock_web_server/. Убедитесь, что она есть в ветке на сервере.");
+            throw new InvalidOperationException(InstallerStrings.ErrorRepoMissingWebServer);
 
-        progress.Report((60, "Установка зависимостей Python (pip)…"));
+        progress.Report(new InstallProgress(60, InstallerStrings.ProgressPip, Indeterminate: true));
         await _pip.InstallIfNeededAsync(state, ct).ConfigureAwait(false);
         _store.Save(state);
 
-        progress.Report((75, "Проверка порта 3000…"));
+        progress.Report(new InstallProgress(75, InstallerStrings.ProgressPort, Indeterminate: false));
         if (await PortChecker.IsLocalPortInUseAsync(InstallerPaths.ServerPort, ct).ConfigureAwait(false))
-            throw new InvalidOperationException(
-                "Порт 3000 занят. Закройте другое приложение, которое его использует.");
+            throw new InvalidOperationException(InstallerStrings.ErrorPortInUse);
 
-        progress.Report((85, "Запуск веб-сервера…"));
+        progress.Report(new InstallProgress(85, InstallerStrings.ProgressServer, Indeterminate: false));
         _server.Start(state);
         _store.Save(state);
 
-        progress.Report((92, "Ожидание ответа http://localhost:3000 …"));
+        progress.Report(new InstallProgress(92, InstallerStrings.ProgressWaitHttp, Indeterminate: true));
         await ServerLauncher.WaitForHttpOkAsync(ct).ConfigureAwait(false);
 
-        progress.Report((98, "Открытие браузера…"));
+        progress.Report(new InstallProgress(98, InstallerStrings.ProgressBrowser, Indeterminate: false));
         ServerLauncher.OpenBrowser();
 
-        progress.Report((100, "Готово. Сервер запущен."));
+        progress.Report(new InstallProgress(100, InstallerStrings.ProgressDone, Indeterminate: false));
         _log.Info("Pipeline completed successfully.");
     }
 }

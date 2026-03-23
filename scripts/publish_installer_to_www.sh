@@ -23,9 +23,11 @@ WWW="${INSTALLER_WWW:-/var/www/installer}"
 if [[ -d "$(dirname "$WWW")" ]] && [[ -w "$(dirname "$WWW")" || "$(id -u)" -eq 0 ]]; then
   mkdir -p "$WWW"
   cp -f "$EXE" "$WWW/qwertystock.exe"
+  cp -f "$EXE" "$WWW/qwertystock-en.exe"
+  cp -f "$EXE" "$WWW/qwertystock-ru.exe"
   cp -f "$ROOT/installer/version.json" "$WWW/version.json"
-  echo "Copied to $WWW/"
+  echo "Copied to $WWW/ (qwertystock.exe + qwertystock-en.exe + qwertystock-ru.exe)"
 else
   echo "Install to web root (requires sudo):"
-  echo "  sudo mkdir -p $WWW && sudo cp -f \"$EXE\" $WWW/qwertystock.exe && sudo cp -f \"$ROOT/installer/version.json\" $WWW/version.json"
+  echo "  sudo mkdir -p $WWW && sudo cp -f \"$EXE\" $WWW/qwertystock.exe && sudo cp -f \"$EXE\" $WWW/qwertystock-en.exe && sudo cp -f \"$EXE\" $WWW/qwertystock-ru.exe && sudo cp -f \"$ROOT/installer/version.json\" $WWW/version.json"
 fi

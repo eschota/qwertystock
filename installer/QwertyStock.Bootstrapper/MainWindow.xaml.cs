@@ -11,9 +11,16 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
+        SourceInitialized += (_, _) => DwmWindowInterop.TryApplyRoundedCorners(this);
         InitializeComponent();
         _orchestrator = new InstallerOrchestrator(_log);
-        VersionText.Text = "v" + AppVersion.Semantic;
+        BrandLine1.Text = InstallerStrings.BrandLine1;
+        BrandLine2.Text = InstallerStrings.BrandLine2;
+        TaglineText.Text = InstallerStrings.Tagline;
+        IntroText.Text = InstallerStrings.IntroBody;
+        StatusText.Text = InstallerStrings.StatusStarting;
+        VersionText.Text = InstallerStrings.FormatVersion(AppVersion.Semantic);
+        CloseButton.ToolTip = InstallerStrings.CloseTooltip;
     }
 
     private void Window_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -52,10 +59,12 @@ public partial class MainWindow : Window
     protected override async void OnContentRendered(EventArgs e)
     {
         base.OnContentRendered(e);
-        var progress = new Progress<(int percent, string message)>(p =>
+        var progress = new Progress<InstallProgress>(p =>
         {
-            ProgressBar.Value = p.percent;
-            StatusText.Text = p.message;
+            ProgressBar.IsIndeterminate = p.Indeterminate;
+            if (!p.Indeterminate)
+                ProgressBar.Value = p.Percent;
+            StatusText.Text = p.Message;
         });
         try
         {
@@ -64,8 +73,9 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             _log.Error("Installation failed", ex);
+            ProgressBar.IsIndeterminate = false;
             StatusText.Text = ex.Message;
-            MessageBox.Show(ex.Message, "QwertyStock", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(ex.Message, InstallerStrings.AppTitle, MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }

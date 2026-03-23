@@ -27,7 +27,7 @@ public sealed class PipInstallService
         var proxyEnv = ProxySession.GetProcessEnvironment();
         var r = await ProcessRunner.RunAsync(
             InstallerPaths.PythonExe,
-            "-m pip install -r requirements.txt",
+            "-m pip install --no-cache-dir -r requirements.txt",
             InstallerPaths.WebServerDir,
             proxyEnv.Count > 0 ? proxyEnv : null,
             ct).ConfigureAwait(false);

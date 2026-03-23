@@ -23,11 +23,8 @@ public sealed class PythonRuntimeBootstrapper
         {
             _log.Info("Downloading embeddable Python runtime…");
             var zipPath = Path.Combine(Path.GetTempPath(), "python-embed-" + Guid.NewGuid().ToString("N") + ".zip");
-            await using (var s = await http.GetStreamAsync(InstallerPaths.PythonEmbedZipUrl, ct).ConfigureAwait(false))
-            await using (var fs = new FileStream(zipPath, FileMode.Create, FileAccess.Write, FileShare.None))
-            {
-                await s.CopyToAsync(fs, ct).ConfigureAwait(false);
-            }
+            await HttpDownload.DownloadToFileAsync(http, InstallerPaths.PythonEmbedZipUrl, zipPath, ct)
+                .ConfigureAwait(false);
 
             if (Directory.Exists(InstallerPaths.PythonRuntimeDir))
                 Directory.Delete(InstallerPaths.PythonRuntimeDir, true);
@@ -72,12 +69,8 @@ public sealed class PythonRuntimeBootstrapper
         _log.Info("Installing pip…");
         var http = InstallerHttp.Client;
         var getPip = Path.Combine(Path.GetTempPath(), "get-pip-" + Guid.NewGuid().ToString("N") + ".py");
-        await using (var s = await http.GetStreamAsync(new Uri("https://bootstrap.pypa.io/get-pip.py"), ct)
-            .ConfigureAwait(false))
-        await using (var fs = new FileStream(getPip, FileMode.Create, FileAccess.Write, FileShare.None))
-        {
-            await s.CopyToAsync(fs, ct).ConfigureAwait(false);
-        }
+        await HttpDownload.DownloadToFileAsync(http, new Uri("https://bootstrap.pypa.io/get-pip.py"), getPip, ct)
+            .ConfigureAwait(false);
 
         var install = await ProcessRunner.RunAsync(
             InstallerPaths.PythonExe,

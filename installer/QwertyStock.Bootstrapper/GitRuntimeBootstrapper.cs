@@ -24,11 +24,7 @@ public sealed class GitRuntimeBootstrapper
 
         _log.Info("Downloading MinGit…");
         var zipPath = Path.Combine(Path.GetTempPath(), "mingit-" + Guid.NewGuid().ToString("N") + ".zip");
-        await using (var s = await http.GetStreamAsync(InstallerPaths.MinGitZipUrl, ct).ConfigureAwait(false))
-        await using (var fs = new FileStream(zipPath, FileMode.Create, FileAccess.Write, FileShare.None))
-        {
-            await s.CopyToAsync(fs, ct).ConfigureAwait(false);
-        }
+        await HttpDownload.DownloadToFileAsync(http, InstallerPaths.MinGitZipUrl, zipPath, ct).ConfigureAwait(false);
 
         if (Directory.Exists(InstallerPaths.GitDir))
             Directory.Delete(InstallerPaths.GitDir, true);

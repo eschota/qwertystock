@@ -43,11 +43,7 @@ public sealed class SelfUpdateService
         var name = Path.GetFileName(exePath);
         var staged = Path.Combine(dir, Path.GetFileNameWithoutExtension(name) + ".pending" + Path.GetExtension(name));
 
-        await using (var dl = await http.GetStreamAsync(manifest.Url, ct).ConfigureAwait(false))
-        await using (var fs = new FileStream(staged, FileMode.Create, FileAccess.Write, FileShare.None))
-        {
-            await dl.CopyToAsync(fs, ct).ConfigureAwait(false);
-        }
+        await HttpDownload.DownloadToFileAsync(http, manifest.Url, staged, ct).ConfigureAwait(false);
 
         if (!string.IsNullOrWhiteSpace(manifest.Sha256))
         {
@@ -61,13 +57,25 @@ public sealed class SelfUpdateService
         }
 
         var batch = Path.Combine(Path.GetTempPath(), "qwertystock-selfupdate-" + Guid.NewGuid().ToString("N") + ".cmd");
+        // Single-file exe + AV can keep a lock briefly after Exit(0). Retry move instead of one 2s wait.
         var lines = new[]
         {
             "@echo off",
+            "setlocal",
+            "set \"LOG=%LOCALAPPDATA%\\QwertyStock\\logs\\installer.log\"",
+            "set retries=0",
+            ":retry",
             "timeout /t 2 /nobreak >nul",
             $"move /y \"{staged}\" \"{exePath}\"",
+            "if not errorlevel 1 goto ok",
+            "set /a retries+=1",
+            "if %retries% lss 12 goto retry",
+            "echo Self-update: move failed after retries (see installer.log) >> \"%LOG%\"",
+            $"if exist \"{staged}\" del /f /q \"{staged}\" 2>nul",
+            "exit /b 1",
+            ":ok",
             $"start \"\" \"{exePath}\"",
-            $"del \"{batch}\"",
+            "del \"%~f0\"",
         };
         await File.WriteAllLinesAsync(batch, lines, ct).ConfigureAwait(false);
 

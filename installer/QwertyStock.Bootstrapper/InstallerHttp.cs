@@ -20,6 +20,7 @@ public static class InstallerHttp
             UseProxy = proxy != null,
             Proxy = proxy,
             AutomaticDecompression = DecompressionMethods.All,
+            MaxConnectionsPerServer = 16,
         };
         WebProxyHelper.ApplyLocalBypass(proxy);
         _client = new HttpClient(handler, disposeHandler: true) { Timeout = TimeSpan.FromMinutes(20) };
