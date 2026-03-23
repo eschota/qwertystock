@@ -52,8 +52,11 @@ public sealed class InstallerOrchestrator
         if (!Directory.Exists(InstallerPaths.WebServerDir))
             throw new InvalidOperationException(InstallerStrings.ErrorRepoMissingWebServer);
 
-        progress.Report(new InstallProgress(60, InstallerStrings.ProgressPip, Indeterminate: true));
-        await _pip.InstallIfNeededAsync(state, ct).ConfigureAwait(false);
+        var pipActivity = new Progress<string>(line =>
+        {
+            progress.Report(new InstallProgress(60, InstallerStrings.ProgressPip, true, line));
+        });
+        await _pip.InstallIfNeededAsync(state, pipActivity, ct).ConfigureAwait(false);
         _store.Save(state);
 
         progress.Report(new InstallProgress(75, InstallerStrings.ProgressPort, Indeterminate: false));

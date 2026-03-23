@@ -11,14 +11,15 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
-        SourceInitialized += (_, _) => DwmWindowInterop.TryApplyRoundedCorners(this);
         InitializeComponent();
         _orchestrator = new InstallerOrchestrator(_log);
         BrandLine1.Text = InstallerStrings.BrandLine1;
         BrandLine2.Text = InstallerStrings.BrandLine2;
         TaglineText.Text = InstallerStrings.Tagline;
         IntroText.Text = InstallerStrings.IntroBody;
+        WhySlowText.Text = InstallerStrings.WhySlowFootnote;
         StatusText.Text = InstallerStrings.StatusStarting;
+        DetailText.Text = "";
         VersionText.Text = InstallerStrings.FormatVersion(AppVersion.Semantic);
         CloseButton.ToolTip = InstallerStrings.CloseTooltip;
     }
@@ -65,6 +66,16 @@ public partial class MainWindow : Window
             if (!p.Indeterminate)
                 ProgressBar.Value = p.Percent;
             StatusText.Text = p.Message;
+            if (string.IsNullOrEmpty(p.Detail))
+            {
+                DetailText.Text = "";
+                DetailText.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                DetailText.Text = p.Detail;
+                DetailText.Visibility = Visibility.Visible;
+            }
         });
         try
         {
@@ -74,6 +85,8 @@ public partial class MainWindow : Window
         {
             _log.Error("Installation failed", ex);
             ProgressBar.IsIndeterminate = false;
+            DetailText.Text = "";
+            DetailText.Visibility = Visibility.Collapsed;
             StatusText.Text = ex.Message;
             MessageBox.Show(ex.Message, InstallerStrings.AppTitle, MessageBoxButton.OK, MessageBoxImage.Error);
         }

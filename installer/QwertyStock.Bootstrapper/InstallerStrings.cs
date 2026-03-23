@@ -15,8 +15,24 @@ public static class InstallerStrings
 
     public static string IntroBody =>
         IsRu
-            ? "Подождите немного — мы подготовим программу на вашем компьютере и откроем рабочий экран QwertyStock в браузере."
-            : "Please wait — we're setting things up on your computer and will open your QwertyStock workspace in the browser.";
+            ? "Мы ставим Python, Git и приложение QwertyStock на этот компьютер, затем откроем рабочий экран в браузере."
+            : "We install Python, Git, and the QwertyStock app on this PC, then open your workspace in the browser.";
+
+    /// <summary>Short note under intro — why the first run takes long.</summary>
+    public static string WhySlowFootnote =>
+        IsRu
+            ? "Почему долго: первый раз качается Python и Git (~50 МБ), затем репозиторий с GitHub, потом pip тянет пакеты с PyPI по одному. Антивирус и скорость сети сильно влияют — это нормально."
+            : "Why it’s slow: first run downloads Python and Git (~50 MB), then syncs the repo from GitHub, then pip fetches packages from PyPI. Antivirus and network speed matter a lot — that’s expected.";
+
+    public static string PipStartingSummary(int topLevelLines) =>
+        IsRu
+            ? $"pip: установка по requirements.txt (~{topLevelLines} зависимостей в списке)…"
+            : $"pip: installing from requirements.txt (~{topLevelLines} top-level entries)…";
+
+    public static string PipInstallFailed(int exitCode, string stderrTail) =>
+        IsRu
+            ? $"pip завершился с кодом {exitCode}. Последние строки:\n{stderrTail}"
+            : $"pip exited with code {exitCode}. Last output:\n{stderrTail}";
 
     public static string StatusStarting => IsRu ? "Запуск…" : "Starting…";
 

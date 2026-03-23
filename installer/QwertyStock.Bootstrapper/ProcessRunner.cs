@@ -34,6 +34,54 @@ public static class ProcessRunner
         return (p.ExitCode, stdout, stderr);
     }
 
+    /// <summary>Streams stderr line-by-line while the process runs (avoids buffer deadlock with pip).</summary>
+    public static async Task<int> RunWithStderrLinesAsync(
+        string fileName,
+        string arguments,
+        string? workingDirectory,
+        IReadOnlyDictionary<string, string>? extraEnvironment,
+        Action<string> onStderrLine,
+        CancellationToken ct)
+    {
+        var psi = new ProcessStartInfo(fileName, arguments)
+        {
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+            WorkingDirectory = workingDirectory ?? Environment.CurrentDirectory,
+        };
+        if (extraEnvironment != null)
+        {
+            foreach (var kv in extraEnvironment)
+                psi.Environment[kv.Key] = kv.Value;
+        }
+
+        using var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
+        if (!p.Start())
+            throw new InvalidOperationException($"Failed to start process: {fileName}");
+
+        var stderrTask = ReadLinesAsync(p.StandardError, onStderrLine, ct);
+        var stdoutTask = p.StandardOutput.ReadToEndAsync(ct);
+        await p.WaitForExitAsync(ct).ConfigureAwait(false);
+        await Task.WhenAll(stderrTask, stdoutTask).ConfigureAwait(false);
+        return p.ExitCode;
+    }
+
+    private static async Task ReadLinesAsync(
+        StreamReader reader,
+        Action<string> onLine,
+        CancellationToken ct)
+    {
+        while (true)
+        {
+            var line = await reader.ReadLineAsync(ct).ConfigureAwait(false);
+            if (line == null)
+                break;
+            onLine(line);
+        }
+    }
+
     public static IReadOnlyDictionary<string, string>? Merge(
         IReadOnlyDictionary<string, string>? a,
         IReadOnlyDictionary<string, string>? b)
