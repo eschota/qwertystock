@@ -1,0 +1,48 @@
+{
+  "manifestVersion": "1.0.0",
+  "title": "QwertyStock Local Cabinet — OAuth2 / OIDC integration",
+  "issuedAt": "2025-03-23",
+  "canonicalBaseUrl": "https://way.qwertystock.com/docs/auth/",
+  "protocol": {
+    "name": "OAuth 2.0 Authorization Code with PKCE",
+    "references": [
+      "RFC 6749 (OAuth 2.0)",
+      "RFC 7636 (PKCE)",
+      "OpenID Connect Core 1.0 (recommended)"
+    ]
+  },
+  "issuer": {
+    "description": "Идентификатор и OpenID Provider — материнский сайт QwertyStock.",
+    "issuerUrl": "https://www.qwertystock.com",
+    "openidConfigurationUrl": "https://www.qwertystock.com/.well-known/openid-configuration",
+    "note": "Эндпоинт discovery должен отдавать JSON по спецификации OIDC. Если пока недоступен — использовать поля endpoints ниже как единственный источник правды до внедрения discovery."
+  },
+  "endpoints": {
+    "authorization": "https://www.qwertystock.com/oauth/authorize",
+    "token": "https://www.qwertystock.com/oauth/token",
+    "userinfo": "https://www.qwertystock.com/oauth/userinfo",
+    "revocation": null,
+    "jwks": "https://www.qwertystock.com/.well-known/jwks.json",
+    "note": "Пути — целевые для реализации на материнском сайте. Допускается перенос на поддомен api.* при условии обновления этого манифеста и спецификации."
+  },
+  "client": {
+    "clientId": "qwertystock-local-cabinet",
+    "clientType": "public",
+    "tokenEndpointAuthMethod": "none",
+    "grantTypes": ["authorization_code"],
+    "responseTypes": ["code"],
+    "pkceRequired": true,
+    "codeChallengeMethod": "S256",
+    "redirectUris": [
+      "http://127.0.0.1:7332/auth/callback",
+      "http://localhost:7332/auth/callback"
+    ],
+    "scopesSupported": ["openid", "profile", "email"],
+    "scopesDefault": "openid profile email"
+  },
+  "documentation": {
+    "protocolMarkdown": "https://way.qwertystock.com/docs/auth/AUTH_PROTOCOL.md",
+    "protocolHtml": "https://way.qwertystock.com/docs/auth/index.html",
+    "thisManifest": "https://way.qwertystock.com/docs/auth/auth-manifest.json"
+  }
+}

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QwertyStock — авторизация локального кабинета (спецификация)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 52rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #1a1a1a; }
+    h1 { font-size: 1.35rem; }
+    ul { padding-left: 1.2rem; }
+    a { color: #c45a1a; }
+    code { background: #f4f4f4; padding: 0.1em 0.35em; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Авторизация локального кабинета ↔ qwertystock.com</h1>
+  <p>Машиночитаемый манифест и полное описание протокола для разработчика материнского сайта.</p>
+  <ul>
+    <li><a href="auth-manifest.json"><code>auth-manifest.json</code></a> — манифест (OAuth2/OIDC, client_id, redirect URIs, URL эндпоинтов)</li>
+    <li><a href="AUTH_PROTOCOL.md"><code>AUTH_PROTOCOL.md</code></a> — полная спецификация потока (PKCE, токены, чеклист)</li>
+  </ul>
+  <p>Канонический базовый URL: <code>https://way.qwertystock.com/docs/auth/</code></p>
+</body>
+</html>

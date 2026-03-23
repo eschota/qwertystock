@@ -18,6 +18,28 @@
 - `GET /health`, `GET /api/git/health` — `200` и тело `ok`.
 - `POST /api/git/webhook` — события GitHub (`push` в настроенную ветку → `git pull --ff-only` + перезапуск unit).
 
+## Документация авторизации локального кабинета (way)
+
+Статика из репозитория: каталог `docs/auth/` — **манифест OAuth2/OIDC** и **полное описание протокола** для разработчика материнского сайта.
+
+Публичные URL (после настройки nginx `location ^~ /docs/` → `alias .../qwertystock/docs/`):
+
+- **`https://way.qwertystock.com/docs/auth/`** — оглавление ([index.html](docs/auth/index.html))
+- **`https://way.qwertystock.com/docs/auth/auth-manifest.json`** — машиночитаемый манифест
+- **`https://way.qwertystock.com/docs/auth/AUTH_PROTOCOL.md`** — спецификация (Markdown)
+
+Пример nginx:
+
+```nginx
+location ^~ /docs/ {
+    alias /home/debian/qwertystock/docs/;
+    try_files $uri =404;
+    charset utf-8;
+}
+```
+
+Для `index.html` и `.md` при необходимости задать `default_type` (`text/html` / `text/markdown`).
+
 ## Лендинг StockSubmitter (зеркало)
 
 После `./scripts/fetch_binary_assets.sh` и блоков nginx для `/app.html` и `/app/` (см. `app/BINARY_ASSETS_SETUP.md`):
