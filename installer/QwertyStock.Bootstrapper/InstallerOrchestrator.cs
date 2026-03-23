@@ -25,9 +25,9 @@ public sealed class InstallerOrchestrator
     public async Task RunAsync(IProgress<(int percent, string message)> progress, CancellationToken ct)
     {
         if (!OperatingSystem.IsWindows())
-            throw new PlatformNotSupportedException("QwertyStock bootstrapper runs on Windows only.");
+            throw new PlatformNotSupportedException("Этот установщик работает только в Windows.");
 
-        progress.Report((2, "Preparing…"));
+        progress.Report((2, "Подготовка…"));
         Directory.CreateDirectory(InstallerPaths.Root);
         Directory.CreateDirectory(InstallerPaths.LogsDir);
 
@@ -36,44 +36,44 @@ public sealed class InstallerOrchestrator
             ? InstallerPaths.DefaultManifestUrl
             : state.UpdateManifestUrl!;
 
-        progress.Report((5, "Checking for installer updates…"));
+        progress.Report((5, "Проверка обновлений установщика…"));
         await _selfUpdate.ApplyIfNewerAsync(manifestUrl, ct).ConfigureAwait(false);
 
-        progress.Report((15, "Ensuring Python runtime…"));
+        progress.Report((15, "Установка встроенного Python…"));
         await _python.EnsureAsync(state, ct).ConfigureAwait(false);
         _store.Save(state);
 
-        progress.Report((30, "Ensuring Git…"));
+        progress.Report((30, "Установка portable Git…"));
         await _git.EnsureAsync(state, ct).ConfigureAwait(false);
         _store.Save(state);
 
-        progress.Report((45, "Synchronizing repository…"));
+        progress.Report((45, "Синхронизация репозитория…"));
         await _repo.SyncAsync(state.GitBranch, ct).ConfigureAwait(false);
 
         if (!Directory.Exists(InstallerPaths.WebServerDir))
             throw new InvalidOperationException(
-                "qwertystock_web_server/ is missing from the repository. Ensure it exists on the remote branch.");
+                "В репозитории нет папки qwertystock_web_server/. Убедитесь, что она есть в ветке на сервере.");
 
-        progress.Report((60, "Installing Python dependencies…"));
+        progress.Report((60, "Установка зависимостей Python (pip)…"));
         await _pip.InstallIfNeededAsync(state, ct).ConfigureAwait(false);
         _store.Save(state);
 
-        progress.Report((75, "Checking port 3000…"));
+        progress.Report((75, "Проверка порта 3000…"));
         if (await PortChecker.IsLocalPortInUseAsync(InstallerPaths.ServerPort, ct).ConfigureAwait(false))
             throw new InvalidOperationException(
-                "Port 3000 is already in use. Stop the other application or change the conflicting service.");
+                "Порт 3000 занят. Закройте другое приложение, которое его использует.");
 
-        progress.Report((85, "Starting web server…"));
+        progress.Report((85, "Запуск веб-сервера…"));
         _server.Start(state);
         _store.Save(state);
 
-        progress.Report((92, "Waiting for http://localhost:3000 …"));
+        progress.Report((92, "Ожидание ответа http://localhost:3000 …"));
         await ServerLauncher.WaitForHttpOkAsync(ct).ConfigureAwait(false);
 
-        progress.Report((98, "Opening browser…"));
+        progress.Report((98, "Открытие браузера…"));
         ServerLauncher.OpenBrowser();
 
-        progress.Report((100, "Done. Server is running."));
+        progress.Report((100, "Готово. Сервер запущен."));
         _log.Info("Pipeline completed successfully.");
     }
 }

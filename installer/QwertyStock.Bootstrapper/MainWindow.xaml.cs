@@ -1,5 +1,7 @@
 using System.Windows;
-using System.Windows.Media.Imaging;
+using System.Windows.Input;
+using System.Windows.Media.Animation;
+using XamlAnimatedGif;
 
 namespace QwertyStock.Bootstrapper;
 
@@ -12,15 +14,20 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         _orchestrator = new InstallerOrchestrator(_log);
-        try
-        {
-            LogoImage.Source = new BitmapImage(
-                new Uri("pack://application:,,,/Assets/QS_LOGO.gif", UriKind.Absolute));
-        }
-        catch (Exception ex)
-        {
-            _log.Error("Could not load embedded logo", ex);
-        }
+        var gifUri = new Uri("pack://application:,,,/Assets/QS_LOGO.gif", UriKind.Absolute);
+        AnimationBehavior.SetSourceUri(LogoImage, gifUri);
+        AnimationBehavior.SetRepeatBehavior(LogoImage, RepeatBehavior.Forever);
+    }
+
+    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ButtonState == MouseButtonState.Pressed)
+            DragMove();
+    }
+
+    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
     }
 
     protected override async void OnContentRendered(EventArgs e)
