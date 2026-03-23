@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -21,10 +20,7 @@ public partial class MainWindow : Window
         AnimationBehavior.SetSourceUri(LogoImage, gifUri);
         AnimationBehavior.SetRepeatBehavior(LogoImage, RepeatBehavior.Forever);
 
-        var v = Assembly.GetExecutingAssembly().GetName().Version;
-        VersionText.Text = v is { Build: >= 0 }
-            ? $"v{v.Major}.{v.Minor}.{v.Build}"
-            : "v?";
+        VersionText.Text = "v" + AppVersion.Semantic;
     }
 
     private void Window_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

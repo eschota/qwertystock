@@ -21,8 +21,7 @@ public static class InstallerHttp
             Proxy = proxy,
             AutomaticDecompression = DecompressionMethods.All,
         };
-        if (proxy is WebProxy wp)
-            wp.BypassProxyOnLocal = true;
+        WebProxyHelper.ApplyLocalBypass(proxy);
         _client = new HttpClient(handler, disposeHandler: true) { Timeout = TimeSpan.FromMinutes(20) };
     }
 }

@@ -21,37 +21,38 @@ public static class OutboundProxySetup
         }
 
         log.Info("Прямой доступ недоступен, перебор HTTP-прокси…");
-        foreach (var uri in catalog.Http)
-        {
-            if (!Uri.TryCreate(uri, UriKind.Absolute, out var u))
-                continue;
-            var proxy = new WebProxy(u);
-            if (await ProbeAsync(proxy, log, uri, ct).ConfigureAwait(false))
-            {
-                ProxySession.SetProxy(uri, isHttp: true);
-                InstallerHttp.Initialize(proxy);
-                log.Info($"Сеть: выбран HTTP-прокси {uri}");
-                return;
-            }
-        }
+        if (await TryProxyListAsync(catalog.Http, isHttp: true, log, ct).ConfigureAwait(false))
+            return;
 
         log.Info("HTTP-прокси не подошли, перебор SOCKS5…");
-        foreach (var uri in catalog.Socks5)
-        {
-            if (!Uri.TryCreate(uri, UriKind.Absolute, out var u))
-                continue;
-            var proxy = new WebProxy(u);
-            if (await ProbeAsync(proxy, log, uri, ct).ConfigureAwait(false))
-            {
-                ProxySession.SetProxy(uri, isHttp: false);
-                InstallerHttp.Initialize(proxy);
-                log.Info($"Сеть: выбран SOCKS5 {uri}");
-                return;
-            }
-        }
+        if (await TryProxyListAsync(catalog.Socks5, isHttp: false, log, ct).ConfigureAwait(false))
+            return;
 
         throw new InvalidOperationException(
             "Не удалось выйти в интернет: прямой доступ и все прокси из списка не прошли проверку (https://www.python.org/).");
+    }
+
+    private static async Task<bool> TryProxyListAsync(
+        IReadOnlyList<string> uris,
+        bool isHttp,
+        InstallerLogger log,
+        CancellationToken ct)
+    {
+        foreach (var uri in uris)
+        {
+            if (!Uri.TryCreate(uri, UriKind.Absolute, out var u))
+                continue;
+            var proxy = new WebProxy(u);
+            if (!await ProbeAsync(proxy, log, uri, ct).ConfigureAwait(false))
+                continue;
+
+            ProxySession.SetProxy(uri, isHttp);
+            InstallerHttp.Initialize(proxy);
+            log.Info(isHttp ? $"Сеть: выбран HTTP-прокси {uri}" : $"Сеть: выбран SOCKS5 {uri}");
+            return true;
+        }
+
+        return false;
     }
 
     private static async Task<bool> ProbeAsync(IWebProxy? proxy, InstallerLogger log, string label, CancellationToken ct)
@@ -63,8 +64,7 @@ public static class OutboundProxySetup
                 UseProxy = proxy != null,
                 Proxy = proxy,
             };
-            if (proxy is WebProxy wpProbe)
-                wpProbe.BypassProxyOnLocal = true;
+            WebProxyHelper.ApplyLocalBypass(proxy);
             using var client = new HttpClient(handler, disposeHandler: true) { Timeout = TimeSpan.FromSeconds(15) };
             using var req = new HttpRequestMessage(HttpMethod.Get, ProbeUri);
             using var resp = await client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);

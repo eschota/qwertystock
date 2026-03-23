@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Net.Http;
-using System.Reflection;
 using System.Text.Json;
 
 namespace QwertyStock.Bootstrapper;
@@ -29,8 +28,7 @@ public sealed class SelfUpdateService
         if (manifest == null || string.IsNullOrWhiteSpace(manifest.Version) || string.IsNullOrWhiteSpace(manifest.Url))
             throw new InvalidOperationException("Update manifest is missing version or url.");
 
-        var asm = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 0, 0, 0);
-        var current = $"{asm.Major}.{asm.Minor}.{asm.Build}";
+        var current = AppVersion.Semantic;
         if (!SemverHelper.IsNewer(manifest.Version.Trim(), current))
         {
             _log.Info($"Self-update: current {current}, manifest {manifest.Version} — no update.");
