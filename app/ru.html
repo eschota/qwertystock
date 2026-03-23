@@ -1,4 +1,4 @@
-﻿
+
 <!DOCTYPE html>
 <html lang="ru">
 
@@ -25,9 +25,10 @@
   <title>QWERTYSTOCK | software for digital storefronts</title>
 
 <script>
-  if (new URLSearchParams(window.location.search).get('lang') === 'ru') {
-    const query = window.location.search || '?lang=ru';
-    window.location.replace('/app/ru.html' + query);
+  /* На этой странице уже русская версия — не редиректить при lang=ru (иначе бесконечный цикл). */
+  if (new URLSearchParams(window.location.search).get('lang') === 'en') {
+    const query = window.location.search || '?lang=en';
+    window.location.replace('/app.html' + query);
   }
 </script>
 
