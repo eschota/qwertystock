@@ -18,6 +18,13 @@
 - `GET /health`, `GET /api/git/health` — `200` и тело `ok`.
 - `POST /api/git/webhook` — события GitHub (`push` в настроенную ветку → `git pull --ff-only` + перезапуск unit).
 
+## Лендинг StockSubmitter (зеркало)
+
+После `./scripts/fetch_binary_assets.sh` и блоков nginx для `/app.html` и `/app/` (см. `app/BINARY_ASSETS_SETUP.md`):
+
+- **`https://way.qwertystock.com/app.html`** — EN
+- **`https://way.qwertystock.com/app/ru.html`** — RU
+
 ## Публичный URL вебхука
 
 С учётом nginx на `way.qwertystock.com`:

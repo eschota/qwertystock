@@ -17,6 +17,12 @@ From the repository root:
 mkdir -p app/assets/fonts app/assets/img/icons
 ```
 
+Or run the bundled script (equivalent downloads):
+
+```bash
+./scripts/fetch_binary_assets.sh
+```
+
 ## 1) Rubik font files (`app/assets/fonts/`)
 
 Run these commands from the repository root on the production server:
@@ -69,3 +75,21 @@ python3 -m http.server 8000
 curl -I http://127.0.0.1:8000/app/assets/css/rubik.css
 curl -I http://127.0.0.1:8000/app/assets/img/icons/favicon-32x32.png
 ```
+
+## Production nginx (`way.qwertystock.com`)
+
+Статика из репозитория: корень `app.html`, префикс `/app/` → каталог `app/` в клоне.
+
+```nginx
+location = /app.html {
+    alias /home/debian/qwertystock/app.html;
+    default_type text/html;
+    charset utf-8;
+}
+location ^~ /app/ {
+    alias /home/debian/qwertystock/app/;
+    try_files $uri =404;
+}
+```
+
+Публично: `https://way.qwertystock.com/app.html`
