@@ -24,7 +24,9 @@
 
 **`https://way.qwertystock.com/api/git/webhook`**
 
-В GitHub: Settings → Webhooks → Payload URL как выше, Content type `application/json`, Secret — тот же, что в `github_webhook.secret`.
+В GitHub: Settings → Webhooks → Payload URL как выше, **Secret** — тот же, что в `github_webhook.secret`.
+
+**Content type:** предпочтительно **`application/json`**. Если выбран **`application/x-www-form-urlencoded`**, сервер разбирает поле `payload` (поддержано с версии обработчика form-urlencoded). При несовпадении подписи ответ `401`, при неразобранном теле — `400` (см. Recent Deliveries в настройках вебхука).
 
 ## Сервис systemd
 
