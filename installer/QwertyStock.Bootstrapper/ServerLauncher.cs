@@ -16,6 +16,9 @@ public sealed class ServerLauncher
         _log = log;
     }
 
+    /// <summary>Last started or attached Python process (watchdog).</summary>
+    public Process? LastProcess { get; private set; }
+
     public Process Start(InstallerState state)
     {
         Directory.CreateDirectory(InstallerPaths.Root);
@@ -30,6 +33,7 @@ public sealed class ServerLauncher
             CreateNoWindow = true,
         };
         psi.Environment["PORT"] = InstallerPaths.ServerPort.ToString(CultureInfo.InvariantCulture);
+        psi.Environment["QS_DAEMON_SETTINGS_PATH"] = InstallerPaths.DaemonSettingsPath;
         var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
         if (!p.Start())
             throw new InvalidOperationException("Failed to start Python web server process.");
@@ -45,7 +49,87 @@ public sealed class ServerLauncher
 
         _ = Task.Run(() => PumpLog(p.StandardOutput, InstallerPaths.ServerLog));
         _ = Task.Run(() => PumpLog(p.StandardError, InstallerPaths.ServerLog));
+        LastProcess = p;
         return p;
+    }
+
+    /// <summary>Attach to an already running server (e.g. port was in use and HTTP responded).</summary>
+    public Process? TryAttachFromPidFile()
+    {
+        if (!File.Exists(PidPath))
+            return null;
+        try
+        {
+            var text = File.ReadAllText(PidPath).Trim();
+            if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var pid))
+                return null;
+            var p = Process.GetProcessById(pid);
+            if (p.HasExited)
+                return null;
+            var path = p.MainModule?.FileName;
+            if (path == null
+                || !path.Equals(InstallerPaths.PythonExe, StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    p.Dispose();
+                }
+                catch
+                {
+                    // ignore
+                }
+
+                return null;
+            }
+
+            p.EnableRaisingEvents = true;
+            LastProcess = p;
+            return p;
+        }
+        catch (Exception ex)
+        {
+            _log.Info($"Attach from PID file: {ex.Message}");
+            return null;
+        }
+    }
+
+    public void StopServerProcess()
+    {
+        var p = LastProcess;
+        LastProcess = null;
+        try
+        {
+            if (p is { HasExited: false })
+            {
+                p.Kill(entireProcessTree: true);
+                p.WaitForExit(8000);
+            }
+        }
+        catch (Exception ex)
+        {
+            _log.Info($"Stop server process: {ex.Message}");
+        }
+        finally
+        {
+            try
+            {
+                p?.Dispose();
+            }
+            catch
+            {
+                // ignore
+            }
+        }
+
+        try
+        {
+            if (File.Exists(PidPath))
+                File.Delete(PidPath);
+        }
+        catch
+        {
+            // ignore
+        }
     }
 
     private static async Task PumpLog(StreamReader reader, string path)

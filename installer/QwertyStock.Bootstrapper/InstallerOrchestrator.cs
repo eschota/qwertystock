@@ -22,8 +22,10 @@ public sealed class InstallerOrchestrator
         _server = new ServerLauncher(log);
     }
 
+    public ServerLauncher ServerLauncher => _server;
+
     /// <summary>
-    /// Logon / <c>--startup</c> path: manifest + self-update, then open cabinet if install is complete; otherwise full UI.
+    /// Logon / <c>--startup</c> path: manifest (no exe self-update), then open cabinet if install is complete; otherwise full UI.
     /// </summary>
     public async Task<StartupLaunchResult> RunStartupLaunchAsync(CancellationToken ct)
     {
@@ -33,7 +35,7 @@ public sealed class InstallerOrchestrator
         Directory.CreateDirectory(InstallerPaths.Root);
         Directory.CreateDirectory(InstallerPaths.LogsDir);
 
-        await LoadManifestAndApplySelfUpdateAsync(null, null, ct).ConfigureAwait(false);
+        await LoadManifestAsync(false, null, null, ct).ConfigureAwait(false);
 
         var state = _store.LoadOrCreate();
         if (!await CanQuickLaunchCabinetAsync(state, ct).ConfigureAwait(false))
@@ -43,9 +45,16 @@ public sealed class InstallerOrchestrator
         {
             if (await ServerLauncher.TryHttpOkAsync(ct).ConfigureAwait(false))
             {
-                StartMenuShortcut.CreateOrUpdate();
-                ServerLauncher.OpenBrowser();
-                return StartupLaunchResult.OpenedCabinetAndExit;
+                var attached = _server.TryAttachFromPidFile();
+                if (attached != null)
+                {
+                    StartMenuShortcut.CreateOrUpdate();
+                    ServerLauncher.OpenBrowser();
+                    return StartupLaunchResult.RunTrayDaemon;
+                }
+
+                _log.Info(
+                    "Port responds but our Python PID could not be attached — terminating the process that holds the port.");
             }
 
             await EnsurePortFreeAsync(null, ct).ConfigureAwait(false);
@@ -56,7 +65,7 @@ public sealed class InstallerOrchestrator
         await ServerLauncher.WaitForHttpOkAsync(ct).ConfigureAwait(false);
         StartMenuShortcut.CreateOrUpdate();
         ServerLauncher.OpenBrowser();
-        return StartupLaunchResult.OpenedCabinetAndExit;
+        return StartupLaunchResult.RunTrayDaemon;
     }
 
     public async Task RunAsync(IProgress<InstallProgress>? progress, CancellationToken ct)
@@ -90,7 +99,7 @@ public sealed class InstallerOrchestrator
                     TransferProgressFormatter.FormatBytesOfTotal(tp.BytesReceived, tp.TotalBytes)));
             });
         }
-        var manifest = await LoadManifestAndApplySelfUpdateAsync(progress, selfDl, ct).ConfigureAwait(false);
+        var manifest = await LoadManifestAsync(true, progress, selfDl, ct).ConfigureAwait(false);
 
         progress?.Report(new InstallProgress(ProgressSegments.RuntimeStart, InstallerStrings.ProgressPythonGit, false));
 
@@ -152,7 +161,44 @@ public sealed class InstallerOrchestrator
         _log.Info("Pipeline completed successfully.");
     }
 
-    private async Task<InstallerManifest> LoadManifestAndApplySelfUpdateAsync(
+    /// <summary>
+    /// Background git sync + pip. Returns true if the FastAPI process should be restarted (repo or deps changed).
+    /// </summary>
+    public async Task<bool> BackgroundSyncRepositoryAsync(CancellationToken ct)
+    {
+        await OutboundProxySetup.EnsureAsync(_log, ct).ConfigureAwait(false);
+        var state = _store.LoadOrCreate();
+        var manifestUrl = string.IsNullOrWhiteSpace(state.UpdateManifestUrl)
+            ? InstallerPaths.DefaultManifestUrl
+            : state.UpdateManifestUrl!;
+        var manifest = await InstallerManifestFetcher.FetchAsync(manifestUrl, ct).ConfigureAwait(false);
+
+        var headBefore = await GitRepositoryHelper.ReadHeadAsync(ct).ConfigureAwait(false);
+        var repoRemote = RuntimeAssetUrls.RepoRemoteUrl(manifest);
+        await _repo.SyncAsync(state.GitBranch, repoRemote, null, ct).ConfigureAwait(false);
+        _store.Save(state);
+
+        var headAfter = await GitRepositoryHelper.ReadHeadAsync(ct).ConfigureAwait(false);
+        var headChanged = !string.Equals(headBefore, headAfter, StringComparison.Ordinal);
+
+        var reqPath = Path.Combine(InstallerPaths.WebServerDir, "requirements.txt");
+        if (!File.Exists(reqPath))
+            throw new InvalidOperationException("Missing qwertystock_web_server/requirements.txt after sync.");
+
+        var bytes = await File.ReadAllBytesAsync(reqPath, ct).ConfigureAwait(false);
+        var reqHash = HttpHash.Sha256Hex(bytes);
+        var requirementsMismatch = string.IsNullOrWhiteSpace(state.RequirementsTxtSha256)
+                                   || !HttpHash.EqualsHex(state.RequirementsTxtSha256, reqHash);
+
+        var pipIndex = string.IsNullOrWhiteSpace(manifest.PipIndexUrl) ? null : manifest.PipIndexUrl.Trim();
+        await _pip.InstallIfNeededAsync(state, null, pipIndex, ct).ConfigureAwait(false);
+        _store.Save(state);
+
+        return headChanged || requirementsMismatch;
+    }
+
+    private async Task<InstallerManifest> LoadManifestAsync(
+        bool applySelfUpdateExe,
         IProgress<InstallProgress>? progress,
         IProgress<TransferProgress>? selfDl,
         CancellationToken ct)
@@ -165,7 +211,8 @@ public sealed class InstallerOrchestrator
             : state.UpdateManifestUrl!;
         progress?.Report(new InstallProgress(ProgressSegments.NetworkEnd + 0.5, InstallerStrings.ProgressManifest, false));
         var manifest = await InstallerManifestFetcher.FetchAsync(manifestUrl, ct).ConfigureAwait(false);
-        await _selfUpdate.ApplyIfNewerAsync(manifest, selfDl, ct).ConfigureAwait(false);
+        if (applySelfUpdateExe)
+            await _selfUpdate.ApplyIfNewerAsync(manifest, selfDl, ct).ConfigureAwait(false);
         return manifest;
     }
 

@@ -202,7 +202,11 @@ public partial class MainWindow : Window
                 try
                 {
                     await _orchestrator.RunAsync(progress, CancellationToken.None);
+                    System.Windows.Application.Current.ShutdownMode = ShutdownMode.OnExplicitShutdown;
                     Close();
+                    var tray = new TrayDaemonHost(_log, _orchestrator);
+                    if (!tray.TryEnterTrayDaemon())
+                        System.Windows.Application.Current.Shutdown(0);
                     return;
                 }
                 catch (Exception ex) when (NetworkErrors.IsLikelyNetworkRelated(ex))

@@ -10,6 +10,9 @@ public static class InstallerPaths
     public static string InstallerLog => Path.Combine(LogsDir, "installer.log");
     public static string ServerLog => Path.Combine(LogsDir, "server.log");
     public static string StatePath => Path.Combine(Root, "installer_state.json");
+
+    /// <summary>Shared with FastAPI (env QS_DAEMON_SETTINGS_PATH): repo poll interval, etc.</summary>
+    public static string DaemonSettingsPath => Path.Combine(Root, "daemon_settings.json");
     public static string RuntimeDir => Path.Combine(Root, "runtime");
     public static string PythonRuntimeDir => Path.Combine(RuntimeDir, "python");
     public static string PythonExe => Path.Combine(PythonRuntimeDir, "python.exe");

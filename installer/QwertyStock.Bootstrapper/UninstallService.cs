@@ -10,7 +10,7 @@ public static class UninstallService
 
     public static void RunInteractive()
     {
-        var ok = MessageBox.Show(
+        var ok = System.Windows.MessageBox.Show(
             InstallerStrings.UninstallConfirm,
             InstallerStrings.AppTitle,
             MessageBoxButton.YesNo,
@@ -23,7 +23,7 @@ public static class UninstallService
         TryKillServerFromPidFile();
         TryDeleteDataRoot();
 
-        MessageBox.Show(
+        System.Windows.MessageBox.Show(
             InstallerStrings.UninstallDone,
             InstallerStrings.AppTitle,
             MessageBoxButton.OK,
@@ -72,7 +72,7 @@ public static class UninstallService
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 string.Format(InstallerStrings.UninstallDeleteFailed, ex.Message),
                 InstallerStrings.AppTitle,
                 MessageBoxButton.OK,

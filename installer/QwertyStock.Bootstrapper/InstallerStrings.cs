@@ -173,4 +173,16 @@ public static class InstallerStrings
         IsRu
             ? "Не удалось полностью удалить папку данных: {0}"
             : "Could not fully delete the data folder: {0}";
+
+    public static string TrayTooltip =>
+        IsRu ? "QwertyStock — локальный кабинет" : "QwertyStock — local cabinet";
+
+    public static string TrayOpenCabinet =>
+        IsRu ? "Открыть кабинет" : "Open cabinet";
+
+    public static string TrayForceUpdate =>
+        IsRu ? "Принудительно обновить репозиторий" : "Update repository now";
+
+    public static string TrayExit =>
+        IsRu ? "Выйти" : "Exit";
 }

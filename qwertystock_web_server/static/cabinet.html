@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f27a23">
+  <title>QwertyStock — локальный кабинет</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="https://qwertystock.com/img/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://qwertystock.com/img/icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://qwertystock.com/img/icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --qs-orange: #f27a23;
+      --qs-coral: #e0452e;
+      --qs-deep: #8b1530;
+      --qs-glass: rgba(24, 30, 40, 0.82);
+      --qs-text: #e8edf3;
+      --qs-muted: #9aa3b2;
+      --qs-accent: #ffe49e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Rubik', system-ui, sans-serif;
+      color: var(--qs-text);
+      background: linear-gradient(135deg, #f27a23 0%, #e0452e 45%, #c41e1e 72%, #8b1530 100%);
+    }
+    .shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .top {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.15);
+    }
+    .top__inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .logo-link {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      line-height: 0;
+    }
+    .logo-link img {
+      height: 32px;
+      width: auto;
+    }
+    .top__links a {
+      color: rgba(255,255,255,0.92);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      margin-left: 1.25rem;
+    }
+    .top__links a:hover { color: var(--qs-accent); }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 2rem 1rem 3rem;
+      gap: 1rem;
+    }
+    .card {
+      width: 100%;
+      max-width: 520px;
+      padding: 2rem 1.75rem 1.75rem;
+      border-radius: 2px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: var(--qs-glass);
+      box-shadow: 0 24px 48px rgba(0,0,0,0.35);
+      backdrop-filter: blur(12px);
+    }
+    .card__badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--qs-accent);
+      margin-bottom: 0.75rem;
+    }
+    h1 {
+      margin: 0 0 0.5rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      margin: 0 0 1.25rem;
+      font-size: 0.95rem;
+      color: var(--qs-muted);
+      line-height: 1.55;
+    }
+    .en {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.88rem;
+      color: rgba(232,237,243,0.85);
+      line-height: 1.5;
+    }
+    .stamp {
+      margin-top: 1.5rem;
+      padding: 0.65rem 0.85rem;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.75rem;
+      color: var(--qs-muted);
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.08);
+      word-break: break-all;
+    }
+    .stamp strong { color: #c8d4e0; }
+    footer {
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.45);
+    }
+    footer a { color: rgba(255,228,158,0.9); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    .field { margin-bottom: 0.75rem; }
+    .field label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--qs-muted);
+      margin-bottom: 0.35rem;
+    }
+    .field input[type="number"] {
+      width: 100%;
+      max-width: 12rem;
+      padding: 0.5rem 0.65rem;
+      border-radius: 2px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.25);
+      color: var(--qs-text);
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+    .btn {
+      display: inline-block;
+      margin-top: 0.5rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid rgba(255,228,158,0.45);
+      background: rgba(242,122,35,0.35);
+      color: var(--qs-accent);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+    .btn:hover { background: rgba(242,122,35,0.5); }
+    .settings-hint {
+      font-size: 0.8rem;
+      color: var(--qs-muted);
+      margin-top: 0.5rem;
+      line-height: 1.45;
+    }
+    #settings-msg { font-size: 0.85rem; margin-top: 0.5rem; min-height: 1.2em; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <div class="top__inner">
+        <a class="logo-link" href="https://www.qwertystock.com/" target="_blank" rel="noopener noreferrer"
+           title="Qwertystock — главная галерея">
+          <img src="https://qwertystock.com/img/qwerty_logo.svg" width="210" height="32" alt="Qwertystock">
+        </a>
+        <nav class="top__links">
+          <a href="https://www.qwertystock.com/" target="_blank" rel="noopener noreferrer">Галерея</a>
+          <a href="https://www.qwertystock.com/" target="_blank" rel="noopener noreferrer">Gallery</a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <article class="card">
+        <div class="card__badge">Локальная среда</div>
+        <h1>Кабинет QwertyStock</h1>
+        <p class="sub">
+          Это заглушка интерфейса. Если вы видите этот экран после обновления репозитория или переустановки —
+          веб-сервер подхватил свежую версию.
+        </p>
+        <div class="en">
+          <strong>EN:</strong> This is a UI stub. If this page appears after a git sync or reinstall, your local
+          server is loading the latest bundle as intended.
+        </div>
+        <div class="stamp" id="build-stamp">
+          <strong>Сборка / Build:</strong> {{BUILD_STAMP}}
+        </div>
+      </article>
+      <article class="card">
+        <div class="card__badge">Демон</div>
+        <h1 style="font-size: 1.15rem;">Интервал проверки обновлений</h1>
+        <p class="sub" style="margin-bottom: 0.75rem;">
+          Как часто локальный кабинет опрашивает git и при необходимости перезапускает сервер (30–86400 сек).
+        </p>
+        <div class="en" style="margin-top: 0.5rem; padding-top: 0.75rem;">
+          <strong>EN:</strong> How often the tray daemon syncs the repo and restarts FastAPI if something changed.
+        </div>
+        <div class="field">
+          <label for="poll-interval">Секунды / Seconds</label>
+          <input type="number" id="poll-interval" min="30" max="86400" step="1" value="60">
+        </div>
+        <button type="button" class="btn" id="save-settings">Сохранить / Save</button>
+        <p class="settings-hint">По умолчанию 60 секунд. Default 60 seconds.</p>
+        <p id="settings-msg"></p>
+      </article>
+    </main>
+    <footer>
+      Визуальный стиль и ассеты — с <a href="https://www.qwertystock.com/" target="_blank" rel="noopener noreferrer">qwertystock.com</a>
+      · шрифт Rubik (Google Fonts)
+    </footer>
+  </div>
+  <script>
+    (function () {
+      var input = document.getElementById('poll-interval');
+      var btn = document.getElementById('save-settings');
+      var msg = document.getElementById('settings-msg');
+      function load() {
+        fetch('/api/settings')
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (d && typeof d.repoPollIntervalSeconds === 'number') {
+              input.value = String(d.repoPollIntervalSeconds);
+            }
+          })
+          .catch(function () {
+            msg.textContent = 'Не удалось загрузить настройки / Could not load settings.';
+            msg.style.color = '#ff8a8a';
+          });
+      }
+      function save() {
+        var v = parseInt(input.value, 10);
+        msg.textContent = '';
+        if (isNaN(v) || v < 30 || v > 86400) {
+          msg.textContent = 'Диапазон 30–86400 / Range 30–86400';
+          msg.style.color = '#ff8a8a';
+          return;
+        }
+        fetch('/api/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ repoPollIntervalSeconds: v })
+        })
+          .then(function (r) {
+            if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); });
+            return r.json();
+          })
+          .then(function () {
+            msg.textContent = 'Сохранено / Saved.';
+            msg.style.color = 'var(--qs-accent)';
+          })
+          .catch(function (e) {
+            msg.textContent = 'Ошибка / Error: ' + (e && e.message ? e.message : e);
+            msg.style.color = '#ff8a8a';
+          });
+      }
+      btn.addEventListener('click', save);
+      load();
+    })();
+  </script>
+</body>
+</html>

@@ -4,7 +4,7 @@ using System.Windows;
 
 namespace QwertyStock.Bootstrapper;
 
-public partial class App : Application
+public partial class App : System.Windows.Application
 {
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -50,7 +50,9 @@ public partial class App : Application
         {
             var orch = new InstallerOrchestrator(log);
             await orch.RunAsync(null, CancellationToken.None).ConfigureAwait(true);
-            Environment.Exit(0);
+            var tray = new TrayDaemonHost(log, orch);
+            if (!tray.TryEnterTrayDaemon())
+                Shutdown(0);
         }
         catch (Exception ex)
         {
@@ -66,7 +68,15 @@ public partial class App : Application
         {
             var orch = new InstallerOrchestrator(log);
             var result = await orch.RunStartupLaunchAsync(CancellationToken.None).ConfigureAwait(true);
-            Environment.Exit(result == StartupLaunchResult.NeedFullInstallerUi ? 1 : 0);
+            if (result == StartupLaunchResult.NeedFullInstallerUi)
+            {
+                Environment.Exit(1);
+                return;
+            }
+
+            var tray = new TrayDaemonHost(log, orch);
+            if (!tray.TryEnterTrayDaemon())
+                Environment.Exit(0);
         }
         catch (Exception ex)
         {
@@ -91,14 +101,17 @@ public partial class App : Application
             }
             else
             {
-                Shutdown(0);
+                ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                var tray = new TrayDaemonHost(log, orch);
+                if (!tray.TryEnterTrayDaemon())
+                    Shutdown(0);
             }
         }
         catch (Exception ex)
         {
             try
             {
-                MessageBox.Show(ex.Message, InstallerStrings.AppTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show(ex.Message, InstallerStrings.AppTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch
             {
