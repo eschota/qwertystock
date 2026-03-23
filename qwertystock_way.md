@@ -22,11 +22,9 @@
 
 Статика из репозитория: каталог `docs/auth/` — **манифест OAuth2/OIDC** и **полное описание протокола** для разработчика материнского сайта.
 
-Публичные URL (на сервере way в `sites-available/main` добавлен `location ^~ /docs/` → `alias /home/debian/qwertystock/docs/`):
+Публичный URL (на сервере way в `sites-available/main` добавлен `location ^~ /docs/` → `alias /home/debian/qwertystock/docs/`):
 
-- **`https://way.qwertystock.com/docs/auth/`** — оглавление ([index.html](docs/auth/index.html))
-- **`https://way.qwertystock.com/docs/auth/auth-manifest.json`** — машиночитаемый манифест
-- **`https://way.qwertystock.com/docs/auth/AUTH_PROTOCOL.md`** — спецификация (Markdown)
+- **`https://way.qwertystock.com/docs/auth/`** — одна страница: стиль qwertystock, полный текст протокола, JSON-манифест подгружается с `auth-manifest.json` на той же витрине. Дополнительно в репозитории: [AUTH_PROTOCOL.md](docs/auth/AUTH_PROTOCOL.md) (копия текста для git).
 
 Пример nginx:
 
