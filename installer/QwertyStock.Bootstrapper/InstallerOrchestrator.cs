@@ -22,58 +22,170 @@ public sealed class InstallerOrchestrator
         _server = new ServerLauncher(log);
     }
 
-    public async Task RunAsync(IProgress<InstallProgress> progress, CancellationToken ct)
+    /// <summary>
+    /// Logon / <c>--startup</c> path: manifest + self-update, then open cabinet if install is complete; otherwise full UI.
+    /// </summary>
+    public async Task<StartupLaunchResult> RunStartupLaunchAsync(CancellationToken ct)
     {
         if (!OperatingSystem.IsWindows())
             throw new PlatformNotSupportedException(InstallerStrings.ErrorWindowsOnly);
 
-        progress.Report(new InstallProgress(2, InstallerStrings.ProgressPreparing, Indeterminate: false));
         Directory.CreateDirectory(InstallerPaths.Root);
         Directory.CreateDirectory(InstallerPaths.LogsDir);
 
-        progress.Report(new InstallProgress(4, InstallerStrings.ProgressNetwork, Indeterminate: false));
-        await OutboundProxySetup.EnsureAsync(_log, ct).ConfigureAwait(false);
+        await LoadManifestAndApplySelfUpdateAsync(null, null, ct).ConfigureAwait(false);
 
         var state = _store.LoadOrCreate();
-        var manifestUrl = string.IsNullOrWhiteSpace(state.UpdateManifestUrl)
-            ? InstallerPaths.DefaultManifestUrl
-            : state.UpdateManifestUrl!;
+        if (!await CanQuickLaunchCabinetAsync(state, ct).ConfigureAwait(false))
+            return StartupLaunchResult.NeedFullInstallerUi;
 
-        progress.Report(new InstallProgress(5, InstallerStrings.ProgressSelfUpdate, Indeterminate: true));
-        await _selfUpdate.ApplyIfNewerAsync(manifestUrl, ct).ConfigureAwait(false);
+        if (await PortChecker.IsLocalPortInUseAsync(InstallerPaths.ServerPort, ct).ConfigureAwait(false))
+        {
+            if (await ServerLauncher.TryHttpOkAsync(ct).ConfigureAwait(false))
+            {
+                StartMenuShortcut.CreateOrUpdate();
+                ServerLauncher.OpenBrowser();
+                return StartupLaunchResult.OpenedCabinetAndExit;
+            }
 
-        progress.Report(new InstallProgress(18, InstallerStrings.ProgressPythonGit, Indeterminate: true));
-        await Task.WhenAll(_python.EnsureAsync(state, ct), _git.EnsureAsync(state, ct)).ConfigureAwait(false);
+            throw new InvalidOperationException(InstallerStrings.ErrorPortInUse);
+        }
+
+        _server.Start(state);
+        _store.Save(state);
+        await ServerLauncher.WaitForHttpOkAsync(ct).ConfigureAwait(false);
+        StartMenuShortcut.CreateOrUpdate();
+        ServerLauncher.OpenBrowser();
+        return StartupLaunchResult.OpenedCabinetAndExit;
+    }
+
+    public async Task RunAsync(IProgress<InstallProgress>? progress, CancellationToken ct)
+    {
+        if (!OperatingSystem.IsWindows())
+            throw new PlatformNotSupportedException(InstallerStrings.ErrorWindowsOnly);
+
+        progress?.Report(new InstallProgress(ProgressSegments.PrepareEnd, InstallerStrings.ProgressPreparing, false));
+        Directory.CreateDirectory(InstallerPaths.Root);
+        Directory.CreateDirectory(InstallerPaths.LogsDir);
+
+        progress?.Report(new InstallProgress(ProgressSegments.PrepareEnd + 0.5, InstallerStrings.ProgressCheckingDisk, false));
+        DiskSpaceChecker.EnsureFreeSpaceForInstall();
+
+        IProgress<TransferProgress>? selfDl = null;
+        if (progress != null)
+        {
+            var ui = progress;
+            selfDl = new Progress<TransferProgress>(tp =>
+            {
+                var frac = tp.TotalBytes is > 0 ? tp.BytesReceived / (double)tp.TotalBytes.Value : 0;
+                var pct = ProgressSegments.SelfUpdateStart +
+                          (ProgressSegments.SelfUpdateEnd - ProgressSegments.SelfUpdateStart) * frac;
+                ui.Report(new InstallProgress(
+                    pct,
+                    InstallerStrings.ProgressSelfUpdate,
+                    false,
+                    null,
+                    TransferProgressFormatter.FormatSpeed(tp.BytesPerSecond),
+                    TransferProgressFormatter.FormatEta(tp.EtaSeconds),
+                    TransferProgressFormatter.FormatBytesOfTotal(tp.BytesReceived, tp.TotalBytes)));
+            });
+        }
+        var manifest = await LoadManifestAndApplySelfUpdateAsync(progress, selfDl, ct).ConfigureAwait(false);
+
+        progress?.Report(new InstallProgress(ProgressSegments.RuntimeStart, InstallerStrings.ProgressPythonGit, false));
+
+        var state = _store.LoadOrCreate();
+        var needPython = !File.Exists(InstallerPaths.PythonExe)
+                         || state.PythonEmbedVersion != InstallerPaths.PythonEmbedVersion;
+        var needGit = !File.Exists(InstallerPaths.GitExe)
+                      || state.MinGitVersion != InstallerPaths.MinGitVersion;
+        var router = new RuntimeDownloadRouter(progress, needPython, needGit);
+        var repoRemote = RuntimeAssetUrls.RepoRemoteUrl(manifest);
+        await Task.WhenAll(
+            _python.EnsureAsync(state, router.Python, manifest, ct),
+            _git.EnsureAsync(state, router.Git, manifest, ct)).ConfigureAwait(false);
         _store.Save(state);
 
-        progress.Report(new InstallProgress(45, InstallerStrings.ProgressRepo, Indeterminate: true));
-        await _repo.SyncAsync(state.GitBranch, ct).ConfigureAwait(false);
+        progress?.Report(new InstallProgress(ProgressSegments.RepoStart, InstallerStrings.ProgressRepo, false));
+        await _repo.SyncAsync(state.GitBranch, repoRemote, progress, ct).ConfigureAwait(false);
 
         if (!Directory.Exists(InstallerPaths.WebServerDir))
             throw new InvalidOperationException(InstallerStrings.ErrorRepoMissingWebServer);
 
-        var pipActivity = new Progress<string>(line =>
+        var lastPipDetail = (string?)null;
+        var pipProgress = new Progress<PipSubProgress>(e =>
         {
-            progress.Report(new InstallProgress(60, InstallerStrings.ProgressPip, true, line));
+            if (!string.IsNullOrEmpty(e.DetailLine))
+                lastPipDetail = e.DetailLine;
+            var pct = ProgressSegments.PipStart +
+                      (ProgressSegments.PipEnd - ProgressSegments.PipStart) * Math.Clamp(e.Fraction01, 0, 1);
+            var eta = string.IsNullOrEmpty(e.EtaHint) ? "—" : e.EtaHint;
+            progress?.Report(new InstallProgress(
+                pct,
+                InstallerStrings.ProgressPip,
+                false,
+                e.DetailLine ?? lastPipDetail,
+                SpeedText: "—",
+                EtaText: eta,
+                BytesText: null));
         });
-        await _pip.InstallIfNeededAsync(state, pipActivity, ct).ConfigureAwait(false);
+        var pipIndex = string.IsNullOrWhiteSpace(manifest.PipIndexUrl) ? null : manifest.PipIndexUrl.Trim();
+        await _pip.InstallIfNeededAsync(state, pipProgress, pipIndex, ct).ConfigureAwait(false);
         _store.Save(state);
 
-        progress.Report(new InstallProgress(75, InstallerStrings.ProgressPort, Indeterminate: false));
+        progress?.Report(new InstallProgress(ProgressSegments.PortEnd, InstallerStrings.ProgressPort, false));
         if (await PortChecker.IsLocalPortInUseAsync(InstallerPaths.ServerPort, ct).ConfigureAwait(false))
             throw new InvalidOperationException(InstallerStrings.ErrorPortInUse);
 
-        progress.Report(new InstallProgress(85, InstallerStrings.ProgressServer, Indeterminate: false));
+        progress?.Report(new InstallProgress(ProgressSegments.ServerEnd, InstallerStrings.ProgressServer, false));
         _server.Start(state);
         _store.Save(state);
 
-        progress.Report(new InstallProgress(92, InstallerStrings.ProgressWaitHttp, Indeterminate: true));
+        progress?.Report(new InstallProgress(ProgressSegments.HttpWaitEnd - 1, InstallerStrings.ProgressWaitHttp, false));
         await ServerLauncher.WaitForHttpOkAsync(ct).ConfigureAwait(false);
 
-        progress.Report(new InstallProgress(98, InstallerStrings.ProgressBrowser, Indeterminate: false));
+        progress?.Report(new InstallProgress(99, InstallerStrings.ProgressBrowser, false));
         ServerLauncher.OpenBrowser();
 
-        progress.Report(new InstallProgress(100, InstallerStrings.ProgressDone, Indeterminate: false));
+        progress?.Report(new InstallProgress(100, InstallerStrings.ProgressDone, false));
+        WindowsStartup.Register();
+        StartMenuShortcut.CreateOrUpdate();
         _log.Info("Pipeline completed successfully.");
+    }
+
+    private async Task<InstallerManifest> LoadManifestAndApplySelfUpdateAsync(
+        IProgress<InstallProgress>? progress,
+        IProgress<TransferProgress>? selfDl,
+        CancellationToken ct)
+    {
+        progress?.Report(new InstallProgress(ProgressSegments.NetworkEnd, InstallerStrings.ProgressNetwork, false));
+        await OutboundProxySetup.EnsureAsync(_log, ct).ConfigureAwait(false);
+        var state = _store.LoadOrCreate();
+        var manifestUrl = string.IsNullOrWhiteSpace(state.UpdateManifestUrl)
+            ? InstallerPaths.DefaultManifestUrl
+            : state.UpdateManifestUrl!;
+        progress?.Report(new InstallProgress(ProgressSegments.NetworkEnd + 0.5, InstallerStrings.ProgressManifest, false));
+        var manifest = await InstallerManifestFetcher.FetchAsync(manifestUrl, ct).ConfigureAwait(false);
+        await _selfUpdate.ApplyIfNewerAsync(manifest, selfDl, ct).ConfigureAwait(false);
+        return manifest;
+    }
+
+    private static async Task<bool> CanQuickLaunchCabinetAsync(InstallerState state, CancellationToken ct)
+    {
+        if (!File.Exists(InstallerPaths.PythonExe))
+            return false;
+        if (!Directory.Exists(InstallerPaths.WebServerDir))
+            return false;
+        var mainPy = Path.Combine(InstallerPaths.WebServerDir, "main.py");
+        if (!File.Exists(mainPy))
+            return false;
+        var req = Path.Combine(InstallerPaths.WebServerDir, "requirements.txt");
+        if (!File.Exists(req))
+            return false;
+        var bytes = await File.ReadAllBytesAsync(req, ct).ConfigureAwait(false);
+        var hash = HttpHash.Sha256Hex(bytes);
+        if (string.IsNullOrWhiteSpace(state.RequirementsTxtSha256))
+            return false;
+        return HttpHash.EqualsHex(state.RequirementsTxtSha256, hash);
     }
 }

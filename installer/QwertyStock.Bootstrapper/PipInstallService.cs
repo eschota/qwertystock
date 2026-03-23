@@ -1,5 +1,7 @@
 namespace QwertyStock.Bootstrapper;
 
+public readonly record struct PipSubProgress(double Fraction01, string? DetailLine, string? EtaHint);
+
 public sealed class PipInstallService
 {
     private readonly InstallerLogger _log;
@@ -11,7 +13,11 @@ public sealed class PipInstallService
         _log = log;
     }
 
-    public async Task InstallIfNeededAsync(InstallerState state, IProgress<string>? pipActivity, CancellationToken ct)
+    public async Task InstallIfNeededAsync(
+        InstallerState state,
+        IProgress<PipSubProgress>? pipProgress,
+        string? pipIndexUrl,
+        CancellationToken ct)
     {
         var req = Path.Combine(InstallerPaths.WebServerDir, "requirements.txt");
         if (!File.Exists(req))
@@ -37,15 +43,24 @@ public sealed class PipInstallService
             topLevel++;
         }
 
-        pipActivity?.Report(InstallerStrings.PipStartingSummary(topLevel));
+        var start = DateTime.UtcNow;
+        var estSeconds = Math.Max(120.0, 30.0 + topLevel * 40.0);
+        var estLineEvents = Math.Max(20, topLevel * 4);
+        var lineEvents = 0;
+
+        pipProgress?.Report(new PipSubProgress(0, InstallerStrings.PipStartingSummary(topLevel),
+            InstallerStrings.PipEtaRough((int)estSeconds)));
 
         _log.Info("pip install -r requirements.txt …");
         var proxyEnv = ProxySession.GetProcessEnvironment();
         var tail = new List<string>();
 
+        var indexArg = string.IsNullOrWhiteSpace(pipIndexUrl)
+            ? ""
+            : $" -i \"{pipIndexUrl.Trim()}\"";
         var exit = await ProcessRunner.RunWithStderrLinesAsync(
             InstallerPaths.PythonExe,
-            "-m pip install --no-cache-dir -r requirements.txt",
+            "-m pip install --no-cache-dir -r requirements.txt" + indexArg,
             InstallerPaths.WebServerDir,
             proxyEnv.Count > 0 ? proxyEnv : null,
             line =>
@@ -54,8 +69,17 @@ public sealed class PipInstallService
                 tail.Add(line);
                 if (tail.Count > 40)
                     tail.RemoveAt(0);
-                if (IsInterestingPipLine(line))
-                    pipActivity?.Report(Truncate(line, MaxDetailLength));
+                lineEvents++;
+                var elapsed = (DateTime.UtcNow - start).TotalSeconds;
+                var lineFrac = Math.Min(0.97, lineEvents / (double)estLineEvents);
+                var timeFrac = Math.Min(0.97, elapsed / estSeconds);
+                var frac = Math.Max(lineFrac, timeFrac);
+                var remaining = Math.Max(0, estSeconds - elapsed);
+                var etaHint = remaining > 1
+                    ? InstallerStrings.PipEtaRemaining((int)remaining)
+                    : null;
+                var detail = IsInterestingPipLine(line) ? Truncate(line, MaxDetailLength) : null;
+                pipProgress?.Report(new PipSubProgress(frac, detail, etaHint));
             },
             ct).ConfigureAwait(false);
 
@@ -65,6 +89,7 @@ public sealed class PipInstallService
             throw new InvalidOperationException(InstallerStrings.PipInstallFailed(exit, errTail));
         }
 
+        pipProgress?.Report(new PipSubProgress(1, null, null));
         state.RequirementsTxtSha256 = hash;
     }
 

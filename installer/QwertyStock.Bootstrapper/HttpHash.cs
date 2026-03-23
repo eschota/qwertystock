@@ -21,4 +21,25 @@ public static class HttpHash
     {
         return string.Equals(a.Trim(), b.Trim(), StringComparison.OrdinalIgnoreCase);
     }
+
+    /// <summary>Verifies file SHA256; throws and deletes the file on mismatch.</summary>
+    public static void VerifyFileSha256Hex(string path, string expectedHex)
+    {
+        if (string.IsNullOrWhiteSpace(expectedHex))
+            throw new ArgumentException("Expected SHA256 is required.", nameof(expectedHex));
+        using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        var hex = Sha256Hex(fs);
+        if (EqualsHex(hex, expectedHex))
+            return;
+        try
+        {
+            File.Delete(path);
+        }
+        catch
+        {
+            // ignore
+        }
+
+        throw new InvalidOperationException("Downloaded file failed SHA256 verification.");
+    }
 }

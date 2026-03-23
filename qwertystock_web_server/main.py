@@ -1,4 +1,4 @@
-"""Minimal HTTP entrypoint for the QwertyStock local web UI (bootstrapper default: port 3000)."""
+"""Minimal HTTP entrypoint for the QwertyStock local web UI (bootstrapper default: port 7332)."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
-DEFAULT_PORT = 3000
+DEFAULT_PORT = 7332
 
 app = FastAPI(title="QwertyStock Web", version="0.1.0")
 

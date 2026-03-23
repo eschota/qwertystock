@@ -1,5 +1,11 @@
 {
-  "version": "1.1.2",
+  "version": "1.1.5",
   "url": "https://way.qwertystock.com/installer/qwertystock.exe",
-  "sha256": "0fc332830a8a155cfd7891ce454d053d7b9b494edc1dba28cc491955e17e1de5"
+  "sha256": "53b7c33c2e635c2e87f7e33fc8925c524f25e4bb0476b2a81d18061fe3440d26",
+  "pythonEmbedZipUrl": "https://way.qwertystock.com/installer/mirrors/python-3.11.9-embed-amd64.zip",
+  "pythonEmbedZipSha256": "009d6bf7e3b2ddca3d784fa09f90fe54336d5b60f0e0f305c37f400bf83cfd3b",
+  "minGitZipUrl": "https://way.qwertystock.com/installer/mirrors/MinGit-2.44.0-64-bit.zip",
+  "minGitZipSha256": "ed4e74e171c59c9c9d418743c7109aa595e0cc0d1c80cac574d69ed5e571ae59",
+  "getPipUrl": "https://way.qwertystock.com/installer/mirrors/get-pip.py",
+  "getPipSha256": "feba1c697df45be1b539b40d93c102c9ee9dde1d966303323b830b06f3fbca3c"
 }

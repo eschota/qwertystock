@@ -3,7 +3,7 @@ using System.Net.Http.Headers;
 
 namespace QwertyStock.Bootstrapper;
 
-/// <summary>HTTP downloads with large copy buffers; parallel byte-range fetch when the server supports it.</summary>
+/// <summary>HTTP downloads with progress (bytes, speed, ETA) and optional parallel ranges.</summary>
 internal static class HttpDownload
 {
     public const int CopyBufferSize = 1024 * 1024;
@@ -12,23 +12,29 @@ internal static class HttpDownload
     private const long TargetPartBytes = 8L * 1024 * 1024;
     private const int MaxParallelParts = 8;
 
-    public static async Task DownloadToFileAsync(HttpClient http, string url, string path, CancellationToken ct)
+    public static Task DownloadToFileAsync(HttpClient http, string url, string path, CancellationToken ct) =>
+        DownloadToFileAsync(http, url, path, null, ct);
+
+    public static async Task DownloadToFileAsync(
+        HttpClient http,
+        string url,
+        string path,
+        IProgress<TransferProgress>? progress,
+        CancellationToken ct)
     {
         if (await TryHeadForParallelAsync(http, url, ct).ConfigureAwait(false) is { } probe
             && probe.Length >= ParallelThresholdBytes
             && probe.AcceptRangesBytes)
         {
-            await DownloadParallelToFileAsync(http, url, path, probe.Length, ct).ConfigureAwait(false);
+            await DownloadParallelToFileAsync(http, url, path, probe.Length, progress, ct).ConfigureAwait(false);
             return;
         }
 
-        await DownloadSingleToFileAsync(http, url, path, ct).ConfigureAwait(false);
+        await DownloadSingleToFileAsync(http, url, path, progress, ct).ConfigureAwait(false);
     }
 
-    public static async Task DownloadToFileAsync(HttpClient http, Uri url, string path, CancellationToken ct)
-    {
-        await DownloadToFileAsync(http, url.ToString(), path, ct).ConfigureAwait(false);
-    }
+    public static Task DownloadToFileAsync(HttpClient http, Uri url, string path, IProgress<TransferProgress>? progress, CancellationToken ct) =>
+        DownloadToFileAsync(http, url.ToString(), path, progress, ct);
 
     private static async Task<(long Length, bool AcceptRangesBytes)?> TryHeadForParallelAsync(
         HttpClient http,
@@ -47,11 +53,17 @@ internal static class HttpDownload
         return (len.Value, rangesOk);
     }
 
-    private static async Task DownloadSingleToFileAsync(HttpClient http, string url, string path, CancellationToken ct)
+    private static async Task DownloadSingleToFileAsync(
+        HttpClient http,
+        string url,
+        string path,
+        IProgress<TransferProgress>? progress,
+        CancellationToken ct)
     {
         using var req = new HttpRequestMessage(HttpMethod.Get, url);
         using var resp = await http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
         resp.EnsureSuccessStatusCode();
+        var total = resp.Content.Headers.ContentLength;
         await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
         await using var fs = new FileStream(
             path,
@@ -60,7 +72,18 @@ internal static class HttpDownload
             FileShare.None,
             bufferSize: CopyBufferSize,
             FileOptions.Asynchronous | FileOptions.SequentialScan);
-        await stream.CopyToAsync(fs, CopyBufferSize, ct).ConfigureAwait(false);
+        var tracker = new TransferSpeedTracker();
+        var buffer = new byte[CopyBufferSize];
+        long received = 0;
+        while (true)
+        {
+            var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct).ConfigureAwait(false);
+            if (read == 0)
+                break;
+            await fs.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
+            received += read;
+            progress?.Report(tracker.BuildSnapshot(received, total));
+        }
     }
 
     private static async Task DownloadParallelToFileAsync(
@@ -68,6 +91,7 @@ internal static class HttpDownload
         string url,
         string path,
         long length,
+        IProgress<TransferProgress>? progress,
         CancellationToken ct)
     {
         var partCount = (int)Math.Max(2, Math.Min(MaxParallelParts, (int)Math.Ceiling((double)length / TargetPartBytes)));
@@ -76,6 +100,30 @@ internal static class HttpDownload
         for (var i = 0; i < partPaths.Length; i++)
             partPaths[i] = path + ".part" + i.ToString("D2");
 
+        var tracker = new TransferSpeedTracker();
+        var receivedLock = new object();
+        long receivedTotal = 0;
+
+        void OnMoreBytes(int n)
+        {
+            if (progress == null || n == 0)
+                return;
+            long snap;
+            lock (receivedLock)
+            {
+                receivedTotal += n;
+                snap = receivedTotal;
+            }
+
+            TransferProgress tp;
+            lock (tracker)
+            {
+                tp = tracker.BuildSnapshot(snap, length);
+            }
+
+            progress.Report(tp);
+        }
+
         try
         {
             await Task.WhenAll(
@@ -83,7 +131,8 @@ internal static class HttpDownload
                     async i =>
                     {
                         var (start, end) = ranges[i];
-                        await DownloadRangeToTempAsync(http, url, partPaths[i], start, end, ct).ConfigureAwait(false);
+                        await DownloadRangeToTempAsync(http, url, partPaths[i], start, end, OnMoreBytes, ct)
+                            .ConfigureAwait(false);
                     })).ConfigureAwait(false);
 
             await using (var outFs = new FileStream(
@@ -128,6 +177,7 @@ internal static class HttpDownload
         string tempPath,
         long start,
         long end,
+        Action<int> onBytesRead,
         CancellationToken ct)
     {
         using var req = new HttpRequestMessage(HttpMethod.Get, url);
@@ -147,7 +197,15 @@ internal static class HttpDownload
             FileShare.None,
             bufferSize: CopyBufferSize,
             FileOptions.Asynchronous | FileOptions.SequentialScan);
-        await stream.CopyToAsync(fs, CopyBufferSize, ct).ConfigureAwait(false);
+        var buffer = new byte[CopyBufferSize];
+        while (true)
+        {
+            var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct).ConfigureAwait(false);
+            if (read == 0)
+                break;
+            await fs.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
+            onBytesRead(read);
+        }
     }
 
     private static List<(long Start, long End)> BuildRanges(long total, int parts)
