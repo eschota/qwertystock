@@ -41,8 +41,8 @@
     "scopesDefault": "openid profile email"
   },
   "documentation": {
+    "singlePageSpec": "https://way.qwertystock.com/docs/auth/",
     "protocolMarkdown": "https://way.qwertystock.com/docs/auth/AUTH_PROTOCOL.md",
-    "protocolHtml": "https://way.qwertystock.com/docs/auth/index.html",
     "thisManifest": "https://way.qwertystock.com/docs/auth/auth-manifest.json"
   }
 }

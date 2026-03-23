@@ -1,8 +1,10 @@
 # Протокол авторизации: локальный кабинет QwertyStock ↔ материнский сайт
 
 **Версия документа:** 1.0.0  
-**Манифест (машиночитаемый):** [auth-manifest.json](auth-manifest.json)  
-**Публичная копия на way:** `https://way.qwertystock.com/docs/auth/`
+
+**Каноническая страница для разработчика (всё на одной странице):** [https://way.qwertystock.com/docs/auth/](https://way.qwertystock.com/docs/auth/) — манифест JSON подгружается автоматически + полный протокол.
+
+**Манифест (машиночитаемый):** [auth-manifest.json](auth-manifest.json)
 
 ---
 

@@ -3,22 +3,386 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>QwertyStock — авторизация локального кабинета (спецификация)</title>
+  <meta name="theme-color" content="#f27a23">
+  <title>Авторизация локального кабинета — спецификация QwertyStock</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="https://qwertystock.com/img/icons/favicon-32x32.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 52rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #1a1a1a; }
-    h1 { font-size: 1.35rem; }
+    :root {
+      --qs-orange: #f27a23;
+      --qs-coral: #e0452e;
+      --qs-glass: rgba(24, 30, 40, 0.88);
+      --qs-text: #e8edf3;
+      --qs-muted: #9aa3b2;
+      --qs-accent: #ffe49e;
+      --qs-code-bg: rgba(0,0,0,0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Rubik', system-ui, sans-serif;
+      color: var(--qs-text);
+      background: linear-gradient(135deg, #f27a23 0%, #e0452e 45%, #c41e1e 72%, #8b1530 100%);
+      background-attachment: fixed;
+    }
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 3rem;
+    }
+    header.hero {
+      padding: 1.5rem 0 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      margin-bottom: 1.5rem;
+    }
+    .hero__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .hero__top a.logo { line-height: 0; }
+    .hero__top img { height: 32px; width: auto; }
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--qs-accent);
+      background: rgba(0,0,0,0.2);
+      padding: 0.35rem 0.65rem;
+      border-radius: 2px;
+      border: 1px solid rgba(255,228,158,0.35);
+    }
+    h1 {
+      margin: 0.85rem 0 0.35rem;
+      font-size: clamp(1.35rem, 4vw, 1.75rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    .lead {
+      margin: 0;
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.88);
+      line-height: 1.55;
+      max-width: 42rem;
+    }
+    nav.toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      margin-top: 1.1rem;
+      font-size: 0.88rem;
+    }
+    nav.toc a {
+      color: var(--qs-accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    nav.toc a:hover { text-decoration: underline; }
+    section.card {
+      margin-bottom: 1.25rem;
+      padding: 1.35rem 1.35rem 1.25rem;
+      border-radius: 2px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: var(--qs-glass);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.28);
+      backdrop-filter: blur(12px);
+    }
+    section.card h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    section.card h3 {
+      margin: 1rem 0 0.5rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--qs-accent);
+    }
+    p, li { font-size: 0.92rem; line-height: 1.6; color: rgba(232,237,243,0.95); }
     ul { padding-left: 1.2rem; }
-    a { color: #c45a1a; }
-    code { background: #f4f4f4; padding: 0.1em 0.35em; border-radius: 4px; }
+    li { margin: 0.35rem 0; }
+    a { color: var(--qs-accent); }
+    table.spec {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      margin: 0.5rem 0 0;
+    }
+    table.spec th, table.spec td {
+      text-align: left;
+      padding: 0.5rem 0.65rem;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    table.spec th {
+      background: rgba(0,0,0,0.25);
+      color: var(--qs-muted);
+      font-weight: 600;
+    }
+    table.spec code { font-size: 0.85em; }
+    .code-block {
+      margin: 0.65rem 0 0;
+      padding: 0.85rem 1rem;
+      background: var(--qs-code-bg);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 2px;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.78rem;
+      line-height: 1.45;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    pre.json {
+      margin: 0.5rem 0 0;
+      padding: 1rem;
+      background: var(--qs-code-bg);
+      border: 1px solid rgba(255,228,158,0.2);
+      border-radius: 2px;
+      font-size: 0.76rem;
+      line-height: 1.45;
+      overflow-x: auto;
+      max-height: 22rem;
+      overflow-y: auto;
+    }
+    .checklist { list-style: none; padding-left: 0; }
+    .checklist li::before { content: "☐ "; color: var(--qs-muted); }
+    .en-box {
+      margin-top: 0.75rem;
+      padding: 0.85rem 1rem;
+      background: rgba(0,0,0,0.2);
+      border-left: 3px solid var(--qs-orange);
+      font-size: 0.88rem;
+      color: rgba(232,237,243,0.92);
+    }
+    .en-box strong { color: var(--qs-accent); }
+    footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.45);
+    }
+    .muted { color: var(--qs-muted); font-size: 0.85rem; }
+    .err { color: #ffb4b4; font-size: 0.85rem; }
+    code { background: rgba(0,0,0,0.25); padding: 0.1em 0.35em; border-radius: 3px; font-size: 0.9em; }
   </style>
 </head>
 <body>
-  <h1>Авторизация локального кабинета ↔ qwertystock.com</h1>
-  <p>Машиночитаемый манифест и полное описание протокола для разработчика материнского сайта.</p>
-  <ul>
-    <li><a href="auth-manifest.json"><code>auth-manifest.json</code></a> — манифест (OAuth2/OIDC, client_id, redirect URIs, URL эндпоинтов)</li>
-    <li><a href="AUTH_PROTOCOL.md"><code>AUTH_PROTOCOL.md</code></a> — полная спецификация потока (PKCE, токены, чеклист)</li>
-  </ul>
-  <p>Канонический базовый URL: <code>https://way.qwertystock.com/docs/auth/</code></p>
+  <div class="wrap">
+    <header class="hero">
+      <div class="hero__top">
+        <a class="logo" href="https://www.qwertystock.com/" target="_blank" rel="noopener noreferrer" title="QwertyStock">
+          <img src="https://qwertystock.com/img/qwerty_logo.svg" width="210" height="32" alt="QwertyStock">
+        </a>
+        <span class="badge">Спецификация v1.0.0</span>
+      </div>
+      <h1>Авторизация локального кабинета</h1>
+      <p class="lead">
+        Один документ: машиночитаемый манифест и полный протокол OAuth 2.0 + PKCE (и OIDC) между
+        <strong>www.qwertystock.com</strong> и приложением на <strong>localhost:7332</strong>.
+      </p>
+      <nav class="toc" aria-label="Содержание">
+        <a href="#manifest">Манифест JSON</a>
+        <a href="#goal">Цель</a>
+        <a href="#client">Клиент</a>
+        <a href="#endpoints">Эндпоинты</a>
+        <a href="#flow">Поток</a>
+        <a href="#cors">CORS</a>
+        <a href="#security">Безопасность</a>
+        <a href="#checklist">Чеклист</a>
+        <a href="#english">English</a>
+      </nav>
+    </header>
+
+    <section class="card" id="manifest">
+      <h2>Манифест <code>auth-manifest.json</code></h2>
+      <p class="muted">Загружается с этого же каталога; ниже — актуальное содержимое.</p>
+      <pre class="json" id="manifest-pre">Загрузка…</pre>
+      <p id="manifest-err" class="err" hidden></p>
+    </section>
+
+    <section class="card" id="goal">
+      <h2>1. Цель</h2>
+      <p>Пользователь входит в учётную запись <strong>qwertystock.com</strong> в браузере на материнском сайте. После входа браузер возвращается в локальный кабинет (<code>http://127.0.0.1:7332</code> / <code>http://localhost:7332</code>), который получает токены и может показывать профиль и вызывать API.</p>
+      <p>Отдельного пароля в локальном приложении нет: <strong>OAuth 2.0 Authorization Code + PKCE</strong>, публичный клиент, без <code>client_secret</code> в бинарнике.</p>
+    </section>
+
+    <section class="card" id="actors">
+      <h2>2. Участники</h2>
+      <table class="spec">
+        <thead><tr><th>Участник</th><th>Роль</th></tr></thead>
+        <tbody>
+          <tr><td>Браузер</td><td>Редиректы между материнским сайтом и локальным кабинетом.</td></tr>
+          <tr><td><code>www.qwertystock.com</code></td><td>Логин, выдача <code>authorization_code</code>, <code>token</code>, при OIDC — <code>userinfo</code>, JWKS, discovery.</td></tr>
+          <tr><td>Локальный кабинет (FastAPI)</td><td>PKCE, приём <code>code</code> на <code>/auth/callback</code>, обмен на токены, сессия.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>3. Нормативные ссылки</h2>
+      <ul>
+        <li>RFC 6749 — OAuth 2.0</li>
+        <li>RFC 7636 — PKCE</li>
+        <li>OpenID Connect Core 1.0 (рекомендуется)</li>
+      </ul>
+    </section>
+
+    <section class="card" id="client">
+      <h2>4. Регистрация клиента (на материнском сайте)</h2>
+      <table class="spec">
+        <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+        <tbody>
+          <tr><td><code>client_id</code></td><td><code>qwertystock-local-cabinet</code></td></tr>
+          <tr><td>Тип</td><td>Public (native / desktop / browser)</td></tr>
+          <tr><td>Grant</td><td><code>authorization_code</code></td></tr>
+          <tr><td>PKCE</td><td>Обязателен, метод <code>S256</code></td></tr>
+          <tr><td><code>redirect_uri</code></td><td>Строго: <code>http://127.0.0.1:7332/auth/callback</code>, <code>http://localhost:7332/auth/callback</code></td></tr>
+          <tr><td><code>client_secret</code></td><td>Не выдаётся</td></tr>
+          <tr><td><code>token_endpoint_auth_method</code></td><td><code>none</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card" id="endpoints">
+      <h2>5. Эндпоинты (реализация на материнском сайте)</h2>
+      <p class="muted">Канонические URL — в манифесте выше. Перенос на <code>api.*</code> только с обновлением манифеста и OIDC discovery.</p>
+      <table class="spec">
+        <thead><tr><th>Назначение</th><th>Метод</th><th>URL (пример)</th></tr></thead>
+        <tbody>
+          <tr><td>Авторизация</td><td>GET</td><td><code>https://www.qwertystock.com/oauth/authorize</code></td></tr>
+          <tr><td>Токены</td><td>POST</td><td><code>https://www.qwertystock.com/oauth/token</code></td></tr>
+          <tr><td>UserInfo</td><td>GET</td><td><code>https://www.qwertystock.com/oauth/userinfo</code></td></tr>
+          <tr><td>JWKS</td><td>GET</td><td><code>https://www.qwertystock.com/.well-known/jwks.json</code></td></tr>
+          <tr><td>OIDC Discovery</td><td>GET</td><td><code>https://www.qwertystock.com/.well-known/openid-configuration</code></td></tr>
+        </tbody>
+      </table>
+      <p>Рекомендуется реализовать <strong>OpenID Provider Metadata</strong> со ссылками на <code>authorization_endpoint</code>, <code>token_endpoint</code>, <code>userinfo_endpoint</code>, <code>jwks_uri</code>, <code>issuer</code>.</p>
+    </section>
+
+    <section class="card" id="flow">
+      <h2>6. Поток (Authorization Code + PKCE)</h2>
+      <h3>6.1 Подготовка (локальный кабинет)</h3>
+      <ol>
+        <li>Случайный <code>code_verifier</code> (43–128 символов: <code>[A-Za-z0-9-._~]</code>).</li>
+        <li><code>code_challenge</code> = BASE64URL(SHA256(<code>code_verifier</code>)) без padding <code>=</code>.</li>
+        <li>Случайный <code>state</code> (≥128 бит энтропии), сохранить до callback.</li>
+      </ol>
+      <h3>6.2 Редирект на материнский сайт (GET)</h3>
+      <div class="code-block">https://www.qwertystock.com/oauth/authorize
+  ?response_type=code
+  &amp;client_id=qwertystock-local-cabinet
+  &amp;redirect_uri=&lt;URL-encoded&gt;
+  &amp;scope=openid%20profile%20email
+  &amp;state=&lt;state&gt;
+  &amp;code_challenge=&lt;code_challenge&gt;
+  &amp;code_challenge_method=S256</div>
+      <p><code>redirect_uri</code> — один из зарегистрированных. Если пользователь не залогинен — форма входа на домене <code>www.qwertystock.com</code>.</p>
+      <h3>6.3 Callback</h3>
+      <div class="code-block">http://127.0.0.1:7332/auth/callback?code=&lt;authorization_code&gt;&amp;state=&lt;state&gt;</div>
+      <p>Проверка <code>state</code>, отклонение при несовпадении или без <code>code</code>.</p>
+      <h3>6.4 Обмен кода на токены</h3>
+      <p><code>POST https://www.qwertystock.com/oauth/token</code>, <code>Content-Type: application/x-www-form-urlencoded</code></p>
+      <table class="spec">
+        <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+        <tbody>
+          <tr><td><code>grant_type</code></td><td><code>authorization_code</code></td></tr>
+          <tr><td><code>code</code></td><td>Из callback</td></tr>
+          <tr><td><code>redirect_uri</code></td><td>Тот же, что в authorize</td></tr>
+          <tr><td><code>client_id</code></td><td><code>qwertystock-local-cabinet</code></td></tr>
+          <tr><td><code>code_verifier</code></td><td>Из шага 6.1</td></tr>
+        </tbody>
+      </table>
+      <p>Пример ответа (JSON):</p>
+      <div class="code-block">{
+  "access_token": "...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "refresh_token": "...",
+  "id_token": "..."
+}</div>
+      <p>При scope <code>openid</code> — <code>id_token</code> обязателен (проверка JWT по JWKS, <code>aud</code> = client_id, <code>iss</code> = issuer). Ошибки — RFC 6749 (<code>error</code>, <code>error_description</code>).</p>
+      <h3>6.5 UserInfo (OIDC)</h3>
+      <p><code>GET .../oauth/userinfo</code> с <code>Authorization: Bearer &lt;access_token&gt;</code>.</p>
+    </section>
+
+    <section class="card" id="cors">
+      <h2>7. CORS</h2>
+      <p>Редиректы authorize/callback CORS не требуют. <code>POST /oauth/token</code> с сервера локального кабинета — CORS не нужен. Если токен запрашивает только JS на localhost к API материнского сайта — понадобится явный CORS (отдельное решение).</p>
+    </section>
+
+    <section class="card" id="security">
+      <h2>8. Безопасность</h2>
+      <ol>
+        <li>PKCE обязателен.</li>
+        <li><code>state</code> обязателен (CSRF).</li>
+        <li><code>redirect_uri</code> только whitelist.</li>
+        <li>Не передавать <code>client_secret</code> в локальный клиент.</li>
+        <li>HTTPS на материнском сайте для authorize/token.</li>
+        <li>HTTP localhost для redirect допустим (loopback, RFC 8252).</li>
+      </ol>
+    </section>
+
+    <section class="card" id="checklist">
+      <h2>9. Чеклист для разработчика материнского сайта</h2>
+      <ul class="checklist">
+        <li>Клиент <code>qwertystock-local-cabinet</code> (public, PKCE S256).</li>
+        <li>Whitelist redirect URI (оба localhost).</li>
+        <li><code>GET /oauth/authorize</code>, <code>POST /oauth/token</code>.</li>
+        <li><code>grant_type=authorization_code</code> + <code>code_verifier</code>.</li>
+        <li>Желательно OIDC: <code>id_token</code>, userinfo, discovery, JWKS.</li>
+        <li>Документация ошибок и TTL токенов.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>10. Версионирование</h2>
+      <p><code>manifestVersion</code> в JSON — версия контракта. Смена эндпоинтов или <code>client_id</code> — новая версия манифеста и согласование с командой кабинета.</p>
+    </section>
+
+    <section class="card" id="english">
+      <h2>11. English summary</h2>
+      <div class="en-box">
+        <strong>QwertyStock Local Cabinet</strong> (FastAPI on <code>http://127.0.0.1:7332</code>) uses
+        <strong>OAuth 2.0 Authorization Code with PKCE</strong> against <strong>www.qwertystock.com</strong>.
+        Register public client <code>qwertystock-local-cabinet</code>, whitelist the two localhost redirect URIs,
+        implement <strong>authorize</strong> and <strong>token</strong> endpoints; optionally full <strong>OIDC</strong>
+        (userinfo, id_token, discovery, JWKS). No client secret. Canonical URLs are in the JSON manifest above.
+      </div>
+    </section>
+
+    <footer>
+      Визуальный стиль — с <a href="https://www.qwertystock.com/" target="_blank" rel="noopener noreferrer">qwertystock.com</a>
+      · шрифт Rubik · одна страница для передачи подрядчику
+    </footer>
+  </div>
+  <script>
+    (function () {
+      var pre = document.getElementById('manifest-pre');
+      var err = document.getElementById('manifest-err');
+      fetch('auth-manifest.json', { cache: 'no-store' })
+        .then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
+        .then(function (j) {
+          pre.textContent = JSON.stringify(j, null, 2);
+        })
+        .catch(function (e) {
+          pre.textContent = '';
+          err.hidden = false;
+          err.textContent = 'Не удалось загрузить auth-manifest.json: ' + (e && e.message ? e.message : e);
+        });
+    })();
+  </script>
 </body>
 </html>
