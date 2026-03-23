@@ -31,6 +31,9 @@ public sealed class InstallerOrchestrator
         Directory.CreateDirectory(InstallerPaths.Root);
         Directory.CreateDirectory(InstallerPaths.LogsDir);
 
+        progress.Report((4, "Проверка сети и прокси…"));
+        await OutboundProxySetup.EnsureAsync(_log, ct).ConfigureAwait(false);
+
         var state = _store.LoadOrCreate();
         var manifestUrl = string.IsNullOrWhiteSpace(state.UpdateManifestUrl)
             ? InstallerPaths.DefaultManifestUrl

@@ -24,11 +24,12 @@ public sealed class PipInstallService
         }
 
         _log.Info("pip install -r requirements.txt …");
+        var proxyEnv = ProxySession.GetProcessEnvironment();
         var r = await ProcessRunner.RunAsync(
             InstallerPaths.PythonExe,
             "-m pip install -r requirements.txt",
             InstallerPaths.WebServerDir,
-            null,
+            proxyEnv.Count > 0 ? proxyEnv : null,
             ct).ConfigureAwait(false);
         if (r.ExitCode != 0)
             throw new InvalidOperationException($"pip install failed (exit {r.ExitCode}): {r.StdErr}");

@@ -33,4 +33,20 @@ public static class ProcessRunner
         var stderr = await p.StandardError.ReadToEndAsync(ct).ConfigureAwait(false);
         return (p.ExitCode, stdout, stderr);
     }
+
+    public static IReadOnlyDictionary<string, string>? Merge(
+        IReadOnlyDictionary<string, string>? a,
+        IReadOnlyDictionary<string, string>? b)
+    {
+        if (a == null && b == null)
+            return null;
+        if (a == null)
+            return b;
+        if (b == null)
+            return a;
+        var d = new Dictionary<string, string>(a, StringComparer.OrdinalIgnoreCase);
+        foreach (var kv in b)
+            d[kv.Key] = kv.Value;
+        return d;
+    }
 }

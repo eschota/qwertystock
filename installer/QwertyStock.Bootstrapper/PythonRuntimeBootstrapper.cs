@@ -1,11 +1,9 @@
 using System.IO.Compression;
-using System.Net.Http;
 
 namespace QwertyStock.Bootstrapper;
 
 public sealed class PythonRuntimeBootstrapper
 {
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(15) };
     private readonly InstallerLogger _log;
 
     public PythonRuntimeBootstrapper(InstallerLogger log)
@@ -16,6 +14,7 @@ public sealed class PythonRuntimeBootstrapper
     public async Task EnsureAsync(InstallerState state, CancellationToken ct)
     {
         Directory.CreateDirectory(InstallerPaths.RuntimeDir);
+        var http = InstallerHttp.Client;
 
         var needDownload = !File.Exists(InstallerPaths.PythonExe)
                            || state.PythonEmbedVersion != InstallerPaths.PythonEmbedVersion;
@@ -24,7 +23,7 @@ public sealed class PythonRuntimeBootstrapper
         {
             _log.Info("Downloading embeddable Python runtime…");
             var zipPath = Path.Combine(Path.GetTempPath(), "python-embed-" + Guid.NewGuid().ToString("N") + ".zip");
-            await using (var s = await Http.GetStreamAsync(InstallerPaths.PythonEmbedZipUrl, ct).ConfigureAwait(false))
+            await using (var s = await http.GetStreamAsync(InstallerPaths.PythonEmbedZipUrl, ct).ConfigureAwait(false))
             await using (var fs = new FileStream(zipPath, FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 await s.CopyToAsync(fs, ct).ConfigureAwait(false);
@@ -60,18 +59,20 @@ public sealed class PythonRuntimeBootstrapper
 
     private async Task EnsurePipAsync(CancellationToken ct)
     {
+        var proxyEnv = ProxySession.GetProcessEnvironment();
         var check = await ProcessRunner.RunAsync(
             InstallerPaths.PythonExe,
             "-m pip --version",
             InstallerPaths.PythonRuntimeDir,
-            null,
+            proxyEnv.Count > 0 ? proxyEnv : null,
             ct).ConfigureAwait(false);
         if (check.ExitCode == 0)
             return;
 
         _log.Info("Installing pip…");
+        var http = InstallerHttp.Client;
         var getPip = Path.Combine(Path.GetTempPath(), "get-pip-" + Guid.NewGuid().ToString("N") + ".py");
-        await using (var s = await Http.GetStreamAsync(new Uri("https://bootstrap.pypa.io/get-pip.py"), ct)
+        await using (var s = await http.GetStreamAsync(new Uri("https://bootstrap.pypa.io/get-pip.py"), ct)
             .ConfigureAwait(false))
         await using (var fs = new FileStream(getPip, FileMode.Create, FileAccess.Write, FileShare.None))
         {
@@ -82,7 +83,7 @@ public sealed class PythonRuntimeBootstrapper
             InstallerPaths.PythonExe,
             $"\"{getPip}\"",
             InstallerPaths.PythonRuntimeDir,
-            null,
+            proxyEnv.Count > 0 ? proxyEnv : null,
             ct).ConfigureAwait(false);
         try { File.Delete(getPip); } catch { /* ignore */ }
 

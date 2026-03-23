@@ -8,7 +8,7 @@
     <UseWPF>true</UseWPF>
     <AssemblyName>qwertystock</AssemblyName>
     <RootNamespace>QwertyStock.Bootstrapper</RootNamespace>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <Authors>QwertyStock</Authors>
     <Product>QwertyStock Bootstrapper</Product>
     <Description>Windows installer / launcher for QwertyStock local web server</Description>
@@ -17,6 +17,7 @@
   <ItemGroup>
     <Resource Include="Assets\QS_LOGO.gif" />
     <Resource Include="Assets\app.ico" />
+    <EmbeddedResource Include="Assets\NetworkProxies.json" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="XamlAnimatedGif" Version="2.3.1" />

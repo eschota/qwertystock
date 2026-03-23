@@ -12,7 +12,8 @@ public sealed class RepositorySyncService
     public async Task SyncAsync(string branch, CancellationToken ct)
     {
         var git = InstallerPaths.GitExe;
-        var env = GitEnvironment.PathWithGit();
+        var pfx = ProxySession.GitProxyPrefix();
+        var env = ProcessRunner.Merge(GitEnvironment.PathWithGit(), ProxySession.GetProcessEnvironment());
 
         if (!Directory.Exists(Path.Combine(InstallerPaths.RepoDir, ".git")))
         {
@@ -23,14 +24,14 @@ public sealed class RepositorySyncService
             }
 
             Directory.CreateDirectory(InstallerPaths.Root);
-            var args = $"clone \"{InstallerPaths.RepoRemoteUrl}\" \"{InstallerPaths.RepoDir}\"";
+            var args = $"{pfx}clone \"{InstallerPaths.RepoRemoteUrl}\" \"{InstallerPaths.RepoDir}\"";
             var r = await ProcessRunner.RunAsync(git, args, InstallerPaths.Root, env, ct).ConfigureAwait(false);
             if (r.ExitCode != 0)
                 throw new InvalidOperationException($"git clone failed ({r.ExitCode}): {r.StdErr}");
             return;
         }
 
-        var fetch = await ProcessRunner.RunAsync(git, "fetch origin", InstallerPaths.RepoDir, env, ct)
+        var fetch = await ProcessRunner.RunAsync(git, $"{pfx}fetch origin", InstallerPaths.RepoDir, env, ct)
             .ConfigureAwait(false);
         if (fetch.ExitCode != 0)
         {
@@ -41,7 +42,7 @@ public sealed class RepositorySyncService
 
         var reset = await ProcessRunner.RunAsync(
                 git,
-                $"reset --hard origin/{branch}",
+                $"{pfx}reset --hard origin/{branch}",
                 InstallerPaths.RepoDir,
                 env,
                 ct)
@@ -53,7 +54,7 @@ public sealed class RepositorySyncService
             return;
         }
 
-        var clean = await ProcessRunner.RunAsync(git, "clean -fd", InstallerPaths.RepoDir, env, ct)
+        var clean = await ProcessRunner.RunAsync(git, $"{pfx}clean -fd", InstallerPaths.RepoDir, env, ct)
             .ConfigureAwait(false);
         if (clean.ExitCode != 0)
             throw new InvalidOperationException($"git clean failed ({clean.ExitCode}): {clean.StdErr}");

@@ -1,11 +1,9 @@
 using System.IO.Compression;
-using System.Net.Http;
 
 namespace QwertyStock.Bootstrapper;
 
 public sealed class GitRuntimeBootstrapper
 {
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(15) };
     private readonly InstallerLogger _log;
 
     public GitRuntimeBootstrapper(InstallerLogger log)
@@ -16,6 +14,7 @@ public sealed class GitRuntimeBootstrapper
     public async Task EnsureAsync(InstallerState state, CancellationToken ct)
     {
         Directory.CreateDirectory(InstallerPaths.RuntimeDir);
+        var http = InstallerHttp.Client;
 
         var needDownload = !File.Exists(InstallerPaths.GitExe)
                            || state.MinGitVersion != InstallerPaths.MinGitVersion;
@@ -25,7 +24,7 @@ public sealed class GitRuntimeBootstrapper
 
         _log.Info("Downloading MinGit…");
         var zipPath = Path.Combine(Path.GetTempPath(), "mingit-" + Guid.NewGuid().ToString("N") + ".zip");
-        await using (var s = await Http.GetStreamAsync(InstallerPaths.MinGitZipUrl, ct).ConfigureAwait(false))
+        await using (var s = await http.GetStreamAsync(InstallerPaths.MinGitZipUrl, ct).ConfigureAwait(false))
         await using (var fs = new FileStream(zipPath, FileMode.Create, FileAccess.Write, FileShare.None))
         {
             await s.CopyToAsync(fs, ct).ConfigureAwait(false);

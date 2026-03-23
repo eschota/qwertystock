@@ -53,14 +53,16 @@ public sealed class ServerLauncher
 
     public static async Task WaitForHttpOkAsync(CancellationToken ct)
     {
-        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+        var http = InstallerHttp.Client;
         var deadline = DateTime.UtcNow.AddMinutes(2);
         while (DateTime.UtcNow < deadline)
         {
             ct.ThrowIfCancellationRequested();
             try
             {
-                using var resp = await http.GetAsync(InstallerPaths.LocalServerUrl, ct).ConfigureAwait(false);
+                using var attempt = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                attempt.CancelAfter(TimeSpan.FromSeconds(5));
+                using var resp = await http.GetAsync(InstallerPaths.LocalServerUrl, attempt.Token).ConfigureAwait(false);
                 if (resp.IsSuccessStatusCode)
                     return;
             }

@@ -8,7 +8,6 @@ namespace QwertyStock.Bootstrapper;
 public sealed class SelfUpdateService
 {
     private readonly InstallerLogger _log;
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(5) };
 
     public SelfUpdateService(InstallerLogger log)
     {
@@ -20,7 +19,8 @@ public sealed class SelfUpdateService
     /// </summary>
     public async Task ApplyIfNewerAsync(string manifestUrl, CancellationToken ct)
     {
-        using var response = await Http.GetAsync(manifestUrl, HttpCompletionOption.ResponseHeadersRead, ct)
+        var http = InstallerHttp.Client;
+        using var response = await http.GetAsync(manifestUrl, HttpCompletionOption.ResponseHeadersRead, ct)
             .ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
         await using var stream = await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
@@ -45,7 +45,7 @@ public sealed class SelfUpdateService
         var name = Path.GetFileName(exePath);
         var staged = Path.Combine(dir, Path.GetFileNameWithoutExtension(name) + ".pending" + Path.GetExtension(name));
 
-        await using (var dl = await Http.GetStreamAsync(manifest.Url, ct).ConfigureAwait(false))
+        await using (var dl = await http.GetStreamAsync(manifest.Url, ct).ConfigureAwait(false))
         await using (var fs = new FileStream(staged, FileMode.Create, FileAccess.Write, FileShare.None))
         {
             await dl.CopyToAsync(fs, ct).ConfigureAwait(false);
