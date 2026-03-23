@@ -53,6 +53,20 @@ module/
   telegram_notify.py        # уведомления в Telegram
 ```
 
-## Push в GitHub
+## Push в GitHub (Deploy key на сервере)
 
-На сервере должен быть настроен доступ: **SSH-ключ** в аккаунте или в Deploy keys репозитория, либо **PAT** в URL/`git credential`. Без этого `git push` с сервера завершится ошибкой аутентификации. С рабочей машины, где уже есть доступ: `git pull` / `git push` в `main`.
+На сервере пользователя `debian` создана пара ключей:
+
+- приватный: `~/.ssh/deploy_qwertystock_ed25519` (не копировать, не коммитить);
+- публичный: `~/.ssh/deploy_qwertystock_ed25519.pub` — его содержимое нужно добавить в репозиторий: **Settings → Deploy keys → Add deploy key**, включить **Allow write access**, если с сервера нужны `git push`.
+
+В `~/.ssh/config` задан хост-алиас `github.com-qwertystock`, `origin` в клоне указывает на `git@github.com-qwertystock:eschota/qwertystock.git`.
+
+Проверка после добавления ключа:
+
+```bash
+sudo -u debian ssh -T git@github.com-qwertystock
+# ожидается приветствие вида: Hi ...! You've successfully authenticated...
+```
+
+Альтернатива — **PAT** в HTTPS или личный SSH-ключ в аккаунте GitHub.
