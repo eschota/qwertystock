@@ -1,6 +1,7 @@
 # Binary assets setup for production
 
 This repository keeps the QWERTYSTOCK landing page in a **text-only** form so PR creation from this session does not fail on binary assets.
+This repository keeps the StockSubmitter landing page in a **text-only** form so PR creation from this session does not fail on binary assets.
 
 The landing still expects these binary files to exist on the production server at the exact local paths below:
 
@@ -15,6 +16,12 @@ From the repository root:
 
 ```bash
 mkdir -p app/assets/fonts app/assets/img/icons
+```
+
+Or run the bundled script (equivalent downloads):
+
+```bash
+./scripts/fetch_binary_assets.sh
 ```
 
 ## 1) Rubik font files (`app/assets/fonts/`)
@@ -54,6 +61,7 @@ These files are referenced by:
 - `app/uk.html`
 - `app/pt.html`
 - `app/zh-cn.html`
+- `app/ru.html`
 - `app/manifest.json`
 - `app/browserconfig.xml`
 
@@ -73,3 +81,21 @@ python3 -m http.server 8000
 curl -I http://127.0.0.1:8000/app/assets/css/rubik.css
 curl -I http://127.0.0.1:8000/app/assets/img/icons/favicon-32x32.png
 ```
+
+## Production nginx (`way.qwertystock.com`)
+
+Статика из репозитория: корень `app.html`, префикс `/app/` → каталог `app/` в клоне.
+
+```nginx
+location = /app.html {
+    alias /home/debian/qwertystock/app.html;
+    default_type text/html;
+    charset utf-8;
+}
+location ^~ /app/ {
+    alias /home/debian/qwertystock/app/;
+    try_files $uri =404;
+}
+```
+
+Публично: `https://way.qwertystock.com/app.html`

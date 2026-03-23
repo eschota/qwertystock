@@ -1,7 +1,6 @@
 
 <!DOCTYPE html>
 <html lang="ru">
-<html lang="en">
 
 <head>
   <meta charset="UTF-8">
@@ -11,14 +10,6 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/app/assets/img/icons/favicon-16x16.png">
   <link rel="mask-icon" href="/app/assets/img/icons/safari-pinned-tab.svg" color="#6cdbb3">
   <link rel="manifest" href="/app/manifest.json">
-  <link rel="alternate" hreflang="ru" href="/app.html" />
-  <link rel="alternate" hreflang="en" href="/app/en.html" />
-  <link rel="alternate" hreflang="es" href="/app/es.html" />
-  <link rel="alternate" hreflang="uk" href="/app/uk.html" />
-  <link rel="alternate" hreflang="pt" href="/app/pt.html" />
-  <link rel="alternate" hreflang="zh-CN" href="/app/zh-cn.html" />
-  <link rel="alternate" hreflang="x-default" href="/app/en.html" />
-  <link rel="canonical" href="/app.html" />
   <link rel="alternate" hreflang="en" href="/app.html?lang=en" />
   <link rel="alternate" hreflang="ru" href="/app/ru.html?lang=ru" />
   <link rel="alternate" hreflang="x-default" href="/app.html?lang=en" />
@@ -26,26 +17,18 @@
   <meta name="msapplication-TileImage" content="/app/assets/img/icons/mstile-150x150.png">
   <meta name="msapplication-config" content="/app/browserconfig.xml">
   <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="QWERTYSTOCK - это микросток нового поколения, использующий децентрализованное хранение файлов и позволяющий авторам со всего мира предоставлять свой контент на выгодных условиях своим клиентам.">
-  <meta name="keywords" content="QWERTYSTOCK, микросток, цифровые товары, фото, видео, векторы, иллюстрации, AI контент, децентрализованное хранение, магазин цифрового контента">
+  <meta name="description" content="Наша программа облегчает работу со стоковым контентом разного вида, позволяет сэкономить много времени на загрузке файлов на стоки и отправке их на валидацию инспектором">
+  <meta name="keywords" content="стоковая фотография, съемка для стоков, стоковые агентства, загрузка фотографий на стоки, автозаполнение полей для отправки работ на стоки, софт для ключевания, загрузка контента, стоковый бизнес, софт для работы со стоками, заполнение метаданных, микростокер, продажа фотографий в интернете, инструмент для ключевания, сервис для работы со стоками, копирование метаданных, аналитика трендов на стоках, вектор, иллюстрация, фото, сток, иллюстратор, бесплатно">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" type="text/css" href="/app/assets/css/style.css?1728584671904.0085">
 
-  <title>QWERTYSTOCK | микросток нового поколения</title>
-  <meta name="description" content="Our app makes it easy to work with stock content of any types, saves you a lot of time when uploading your files to microstock agencies and sending them for review.">
-  <meta name="keywords" content="stock photography, stock photo, stock agencies, upload photos, submit photos, keyword software, uploading content, microstock business, microstock software, microstock keywording, microstocker, earn money photography online, keywording uploading tool, microstock services, meta copypaste, microstock analytics, vector, illustration, photo, microstock, illustrator, for free">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" type="text/css" href="/app/assets/css/style.css?1728584671904.0085">
-
-  <title>StockSubmitter | software for microstock agencies (photo stocks) contributor</title>
+  <title>StockSubmitter | программа для работы с фотобанками(микростоками)</title>
 
 <script>
-  if (new URLSearchParams(window.location.search).get('lang') === 'ru') {
-    const query = window.location.search || '?lang=ru';
-    window.location.replace('/app/ru.html' + query);
+  if (new URLSearchParams(window.location.search).get('lang') === 'en') {
+    window.location.replace('/app.html?lang=en');
   }
 </script>
-
 </head>
 
 <body>
@@ -68,34 +51,17 @@
   <header class="header" id="header">
     <div class="container">
       <div class="header__inner">
-        <a href="#" class="logo" data-scroll="#intro"><img src="/app/assets/img/header/SS_Logo_wht.svg" width="25" height="31" alt=""><span class="logo__name">QWERTYSTOCK</span></a>
+        <a href="#" class="logo" data-scroll="#intro"><img src="/app/assets/img/header/SS_Logo_wht.svg" width="25" height="31" alt=""><span class="logo__name">StockSubmitter</span></a>
         <div class="inner__wrapper">
           <nav class="nav" id="nav">
-            <a href="#contacts" data-scroll="#contacts" title="" class="nav__enter"><svg class="enter__icon"><use href="/app/assets/img/sprite.svg#door-open-solid"></use></svg></a>
+            <a href="https://accounts.stocksubmitter.com" title="" class="nav__enter"><svg class="enter__icon"><use href="/app/assets/img/sprite.svg#door-open-solid"></use></svg></a>
             <a href="#" title="" class="nav__link" data-scroll="#about">О нас</a>
+            <a href="#" title="" class="nav__link" data-scroll="#plans">Тарифы</a>
             <a href="#" title="" class="nav__link" data-scroll="#stats">Статистика</a>
             <a href="#" title="" class="nav__link" data-scroll="#contacts">Контакты</a>
           </nav>
           <div class="lang" tabindex="0">
             <div class="lang__head">Русский <svg class="lang__caret"><use href="/app/assets/img/sprite.svg#caret-down-solid"></use></svg></div>
-            <ul class="lang__hidden">
-              <li><a href="/app.html" class="hidden__item">Русский</a></li>
-              <li><a href="/app/en.html" class="hidden__item">English</a></li>
-              <li><a href="/app/es.html" class="hidden__item">Español</a></li>
-              <li><a href="/app/uk.html" class="hidden__item">Українська</a></li>
-              <li><a href="/app/pt.html" class="hidden__item">Português</a></li>
-              <li><a href="/app/zh-cn.html" class="hidden__item">简体中文</a></li>
-        <a href="#" class="logo" data-scroll="#intro"><img src="/app/assets/img/header/SS_Logo_wht.svg" width="25" height="31" alt=""><span class="logo__name">StockSubmitter</span></a>
-        <div class="inner__wrapper">
-          <nav class="nav" id="nav">
-            <a href="https://accounts.stocksubmitter.com" title="" class="nav__enter"><svg class="enter__icon"><use href="/app/assets/img/sprite.svg#door-open-solid"></use></svg></a>
-            <a href="#" title="" class="nav__link" data-scroll="#about">About Us</a>
-            <a href="#" title="" class="nav__link" data-scroll="#plans">Pricing</a>
-            <a href="#" title="" class="nav__link" data-scroll="#stats">Statistics</a>
-            <a href="#" title="" class="nav__link" data-scroll="#contacts">Contacts</a>
-          </nav>
-          <div class="lang" tabindex="0">
-            <div class="lang__head">English <svg class="lang__caret"><use href="/app/assets/img/sprite.svg#caret-down-solid"></use></svg></div>
             <ul class="lang__hidden">
               <li><a href="?lang=en" class="hidden__item">English</a></li>
 <li><a href="?lang=ru" class="hidden__item">Русский</a></li>
@@ -722,41 +688,26 @@
 
       <section class="intro">
         <div class="intro__inner">
-          <h1 class="intro__title"><span class="separator">Продавайте свой контент со своего устройства напрямую.</span> <span class="separator">Автоматическое создание вашего собственного веб магазина.</span></h1>
-          <h2 class="intro__subtitle"><span class="separator">QWERTYSTOCK - это микросток нового поколения, использующий децентрализованное хранение файлов</span> <span class="separator">и позволяющий авторам со всего мира предоставлять свой контент на выгодных условиях своим клиентам.</span></h2>
+          <h1 class="intro__title">
+            <span class="separator">Ускоряйте</span> <span class="separator"> работу со стоками</span>
+          </h1>
+          <h2 class="intro__subtitle">
+            <span class="separator">StockSubmitter — это уникальная программа, которая экономит</span> <span class="separator">до 90% ваших времени и усилий при сабмите на множество стоков</span>
+          </h2>
           <div class="intro__buttons">
-            <a href="#contacts" data-scroll="#contacts" class="intro__button">
+            <a href="https://stocksubmitter.com/download" class="intro__button">
               <h3 class="button__text"><svg class="button__icon"><use href="/app/assets/img/sprite.svg#windows-brands"></use></svg><span class="separator">Windows 10 и выше
 только 64-разрядная</span>
               </h3>
               <div class="button__color"></div>
             </a>
-            <a href="#contacts" data-scroll="#contacts" class="intro__button">
+            <a href="https://microstock.plus/" class="intro__button">
               <h3 class="button__text"><svg class="button__icon"><use href="/app/assets/img/sprite.svg#apple-brands"></use></svg><span class="separator">Mac OS и другие ОС
 Онлайн версия</span></h3>
               <div class="button__color"></div>
             </a>
           </div>
           <div class="intro__pointer"><img src="/app/assets/img/chevron-circle-down.svg" alt="">Прокрутите вниз</div>
-          <h1 class="intro__title">
-            <span class="separator">Speed up</span> <span class="separator">your workflow</span>
-          </h1>
-          <h2 class="intro__subtitle">
-            <span class="separator">StockSubmitter is a unique software that saves up to 90%</span> <span class="separator">of your time and efforts when submitting content to multiple microstock agencies</span>
-          </h2>
-          <div class="intro__buttons">
-            <a href="https://stocksubmitter.com/download" class="intro__button">
-              <h3 class="button__text"><svg class="button__icon"><use href="/app/assets/img/sprite.svg#windows-brands"></use></svg><span class="separator">Windows 10 or newer
-64-bit only</span>
-              </h3>
-              <div class="button__color"></div>
-            </a>
-            <a href="https://microstock.plus/" class="intro__button">
-              <h3 class="button__text"><svg class="button__icon"><use href="/app/assets/img/sprite.svg#apple-brands"></use></svg><span class="separator">macOS / iOS<br>Online version</span></h3>
-              <div class="button__color"></div>
-            </a>
-          </div>
-          <div class="intro__pointer"><img src="/app/assets/img/chevron-circle-down.svg" alt="">Scroll down</div>
         </div>
       </section>
     </div>
@@ -784,34 +735,9 @@
           </div>
           <div class="features__item">
             <img src="/app/assets/img/advantages_block/trial.svg" width="87" height="82" alt="">
-            <h3 class="features__subtitle"><span class="separator">Абсолютно бесплатно</span> <span class="separator">для всех пользователей</span>
+            <h3 class="features__subtitle"><span class="separator">Бесплатная версия</span> <span class="separator">для всех пользователей</span>
             </h3>
-            <div class="features__text">Вы можете пользоваться нашим сервисом абсолютно бесплатно!</div>
-        <h2 class="features__title">What advantages does our product have?</h2>
-        <div class="features__content">
-          <div class="features__item">
-            <img src="/app/assets/img/advantages_block/spyglass.svg" width="87" height="73"  alt="">
-            <h3 class="features__subtitle"><span class="separator">Confidence</span> <span class="separator">in the Future</span>
-            </h3>
-            <div class="features__text">StockSubmitter is on the market for more than 10 years and thousands of users trust it. You can rely on us.</div>
-          </div>
-          <div class="features__item">
-            <img src="/app/assets/img/advantages_block/safety.svg" width="87" height="100" alt="">
-            <h3 class="features__subtitle"><span class="separator">Reliability</span> <span class="separator">and Security</span>
-            </h3>
-            <div class="features__text">Your safety is our priority. All passwords are stored on your computer only. You can protect them additionally by a master password.</div>
-          </div>
-          <div class="features__item">
-            <img src="/app/assets/img/advantages_block/support.svg" width="87" height="81" alt="">
-            <h3 class="features__subtitle"><span class="separator">Quality</span> <span class="separator">Support</span>
-            </h3>
-            <div class="features__text">We offer a high quality support available every day. Resolving an issue takes just a few minutes in the most cases.</div>
-          </div>
-          <div class="features__item">
-            <img src="/app/assets/img/advantages_block/trial.svg" width="87" height="82" alt="">
-            <h3 class="features__subtitle"><span class="separator">Free Version</span> <span class="separator">for Everyone</span>
-            </h3>
-            <div class="features__text">You can fill in the metadata, use QuickMeta and other program features for free. Uploads are unlimited.</div>
+            <div class="features__text">Вы можете заполнять метаданные файлов, использовать QuickMeta и другие возможности программы. Загрузка на стоки не ограничена.</div>
           </div>
         </div>
       </section>
@@ -819,19 +745,15 @@
     <div class="container container--about" id="about">
       <section class="about">
         <div class="about__back">
-          <a href="#about" data-scroll="#about" class="intro__button intro__button--play">
+          <a href="https://www.youtube.com/watch?v=SlXJ4yW3Uko&t" class="intro__button intro__button--play">
             <h3 class="button__text"><svg class="button__icon"><use href="/app/assets/img/sprite.svg#play-circle-regular"></use></svg><span> Наглядное Видео-пособие</span></h3>
-          <a href="https://www.youtube.com/watch?v=sn3O_gFPQnY" class="intro__button intro__button--play">
-            <h3 class="button__text"><svg class="button__icon"><use href="/app/assets/img/sprite.svg#play-circle-regular"></use></svg><span> Video Tutorial</span></h3>
             <div class="button__color"></div>
           </a>
         </div>
         <div class="about__inner">
-          <h2 class="about__title"><span class="separator">Как работает</span> <span class="separator">QWERTYSTOCK?</span></h2>
-          <div class="about__text">QWERTYSTOCK - это программа, которая полностью автоматизирует создание вашего собственного магазина с цифровыми товарами такими как: фото, видео, векторы, иллюстрации и AI контент.</div><div class="about__text">Просто скачайте приложение, авторизуйтесь и укажите файлы, которые хотите продавать - всё остальное программа сделает автоматически.</div><div class="about__text">Вам больше не нужно платить за дорогой хостинг или облачное хранилище - теперь вы можете использовать любое устройство для доставки контента вашим клиентам.</div>
-          <h2 class="about__title"><span class="separator">How does
-it work?</span></h2>
-          <div class="about__text">StockSubmitter is an app that completely automates your microstock workflow: filling, translating and storing metadata, uploading and submitting your content to dozens of microstock agencies at the same time.</div><div class="about__text">You will not have to do these routine operations on every website manually ever again; in addition, our QuickMeta tagging system significantly eases and speeds up tagging.</div><div class="about__text">Control the whole workflow from a single place, track your sales and approval of your content. In other words, work with pleasure!</div>
+          <h2 class="about__title"><span class="separator">Как работает
+StockSubmitter?</span></h2>
+          <div class="about__text">StockSubmitter — это программа, полностью автоматизирующая вашу работу с микростоковыми агентствами: хранение, заполнение и перевод метаданных, одновременную загрузку и сабмит на десятки стоков.</div><div class="about__text">Вам больше не нужно выполнять эти рутинные операции вручную на каждом стоке, а наша система подбора ключевых слов, заголовков и описаний заметно облегчают процесс.</div><div class="about__text">Управляйте процессом из одного места, отслеживайте продажи и одобрение ваших файлов. Иными словами, работайте с удовольствием!</div>
         </div>
       </section>
     </div>
@@ -842,17 +764,17 @@ it work?</span></h2>
       </div>
       <section class="plans">
         <div class="plans__inner">
-          <h2 class="plans__title">Pricing</h2>
-          <div class="plans__text">* A submission is an operation of filling the metadata fields of a single file and sending it for review automatically.<br />Submissions are accounted for every agency separately.<br />For example, if you work with 10 agencies on the Lite plan you will be able to make up to 2500 submissions, 250 to each agency.<br />Please note that uploading files is completely free and unlimited.</div>
+          <h2 class="plans__title">Тарифные планы</h2>
+          <div class="plans__text">* Сабмит — это одно автоматическое заполнение всех полей одного файла и отправка его на проверку инспекторам.<br />Сабмиты считаются отдельно для каждого стока. Например, если вы работаете с 10 стоками и используете тариф Lite,<br />то сможете произвести 2500 сабмитов каждый месяц, по 250 на каждый сток.<br />Загрузка файлов на стоки совершенно бесплатна.</div>
           <div class="plans__chosen">
             
             <div class="plans__item">
               <h3 class="plans__name">Free</h3>
-              <div class="plans__explanation">33 submissions/month<br/>to every agency</div>
-              <div class="plans__cost"><span class="cost__value" id="plancost_Free">0</span> €/mo</div>
+              <div class="plans__explanation">33 сабмитов в месяц<br/>на каждый сток</div>
+              <div class="plans__cost"><span class="cost__value" id="plancost_Free">0</span> €/мес</div>
               <div class="select__wrapper">
                 <select name="select-box" class="select" id="planselpkg_Free" onchange="document.getElementById('plancost_Free').innerHTML = [0][this.selectedIndex]; document.getElementById('planbuy_Free').href = 'https://accounts.stocksubmitter.com/purchasepackage?tariff=0&months=' + [1][this.selectedIndex]">
-                  <option value="item-1"  selected="selected">1 month</option>
+                  <option value="item-1"  selected="selected">1 месяц</option>
                 </select>
               </div>
               
@@ -860,74 +782,74 @@ it work?</span></h2>
 
             <div class="plans__item active">
               <h3 class="plans__name">Starter</h3>
-              <div class="plans__explanation">100 submissions/month<br/>to every agency</div>
-              <div class="plans__cost"><span class="cost__value" id="plancost_Starter">4</span> €/mo</div>
+              <div class="plans__explanation">100 сабмитов в месяц<br/>на каждый сток</div>
+              <div class="plans__cost"><span class="cost__value" id="plancost_Starter">4</span> €/мес</div>
               <div class="select__wrapper">
                 <select name="select-box" class="select" id="planselpkg_Starter" onchange="document.getElementById('plancost_Starter').innerHTML = [4][this.selectedIndex]; document.getElementById('planbuy_Starter').href = 'https://accounts.stocksubmitter.com/purchasepackage?tariff=12&months=' + [3][this.selectedIndex]">
-                  <option value="item-1"  selected="selected">3 months</option>
+                  <option value="item-1"  selected="selected">3 месяца</option>
                 </select>
               </div>
-              <a class="plans__button" id="planbuy_Starter" href="https://accounts.stocksubmitter.com/purchasepackage?tariff=12&months=3">Buy Now</a>
+              <a class="plans__button" id="planbuy_Starter" href="https://accounts.stocksubmitter.com/purchasepackage?tariff=12&months=3">Приобрести</a>
             </div>
 
             <div class="plans__item">
               <h3 class="plans__name">Lite</h3>
-              <div class="plans__explanation">250 submissions/month<br/>to every agency</div>
-              <div class="plans__cost"><span class="cost__value" id="plancost_Lite">8.08</span> €/mo</div>
+              <div class="plans__explanation">250 сабмитов в месяц<br/>на каждый сток</div>
+              <div class="plans__cost"><span class="cost__value" id="plancost_Lite">8.08</span> €/мес</div>
               <div class="select__wrapper">
                 <select name="select-box" class="select" id="planselpkg_Lite" onchange="document.getElementById('plancost_Lite').innerHTML = [12,10,9,8.08][this.selectedIndex]; document.getElementById('planbuy_Lite').href = 'https://accounts.stocksubmitter.com/purchasepackage?tariff=13&months=' + [1,6,12,24][this.selectedIndex]">
-                  <option value="item-1" >1 month</option>
-<option value="item-2" >6 months</option>
-<option value="item-3" >1 year</option>
-<option value="item-4"  selected="selected">2 years</option>
+                  <option value="item-1" >1 месяц</option>
+<option value="item-2" >6 месяцев</option>
+<option value="item-3" >1 год</option>
+<option value="item-4"  selected="selected">2 года</option>
                 </select>
               </div>
-              <a class="plans__button" id="planbuy_Lite" href="https://accounts.stocksubmitter.com/purchasepackage?tariff=13&months=24">Buy Now</a>
+              <a class="plans__button" id="planbuy_Lite" href="https://accounts.stocksubmitter.com/purchasepackage?tariff=13&months=24">Приобрести</a>
             </div>
 
             <div class="plans__item">
               <h3 class="plans__name">Casual</h3>
-              <div class="plans__explanation">400 submissions/month<br/>to every agency</div>
-              <div class="plans__cost"><span class="cost__value" id="plancost_Casual">17</span> €/mo</div>
+              <div class="plans__explanation">400 сабмитов в месяц<br/>на каждый сток</div>
+              <div class="plans__cost"><span class="cost__value" id="plancost_Casual">17</span> €/мес</div>
               <div class="select__wrapper">
                 <select name="select-box" class="select" id="planselpkg_Casual" onchange="document.getElementById('plancost_Casual').innerHTML = [25,20.83,18.75,17][this.selectedIndex]; document.getElementById('planbuy_Casual').href = 'https://accounts.stocksubmitter.com/purchasepackage?tariff=14&months=' + [1,6,12,24][this.selectedIndex]">
-                  <option value="item-1" >1 month</option>
-<option value="item-2" >6 months</option>
-<option value="item-3" >1 year</option>
-<option value="item-4"  selected="selected">2 years</option>
+                  <option value="item-1" >1 месяц</option>
+<option value="item-2" >6 месяцев</option>
+<option value="item-3" >1 год</option>
+<option value="item-4"  selected="selected">2 года</option>
                 </select>
               </div>
-              <a class="plans__button" id="planbuy_Casual" href="https://accounts.stocksubmitter.com/purchasepackage?tariff=14&months=24">Buy Now</a>
+              <a class="plans__button" id="planbuy_Casual" href="https://accounts.stocksubmitter.com/purchasepackage?tariff=14&months=24">Приобрести</a>
             </div>
 
             <div class="plans__item">
               <h3 class="plans__name">Professional</h3>
-              <div class="plans__explanation">1000 submissions/month<br/>to every agency</div>
-              <div class="plans__cost"><span class="cost__value" id="plancost_Professional">40.2</span> €/mo</div>
+              <div class="plans__explanation">1000 сабмитов в месяц<br/>на каждый сток</div>
+              <div class="plans__cost"><span class="cost__value" id="plancost_Professional">40.2</span> €/мес</div>
               <div class="select__wrapper">
                 <select name="select-box" class="select" id="planselpkg_Professional" onchange="document.getElementById('plancost_Professional').innerHTML = [60,50,45,40.2][this.selectedIndex]; document.getElementById('planbuy_Professional').href = 'https://accounts.stocksubmitter.com/purchasepackage?tariff=15&months=' + [1,6,12,24][this.selectedIndex]">
-                  <option value="item-1" >1 month</option>
-<option value="item-2" >6 months</option>
-<option value="item-3" >1 year</option>
-<option value="item-4"  selected="selected">2 years</option>
+                  <option value="item-1" >1 месяц</option>
+<option value="item-2" >6 месяцев</option>
+<option value="item-3" >1 год</option>
+<option value="item-4"  selected="selected">2 года</option>
                 </select>
               </div>
-              <a class="plans__button" id="planbuy_Professional" href="https://accounts.stocksubmitter.com/purchasepackage?tariff=15&months=24">Buy Now</a>
+              <a class="plans__button" id="planbuy_Professional" href="https://accounts.stocksubmitter.com/purchasepackage?tariff=15&months=24">Приобрести</a>
             </div>
 
             <div class="plans__item">
               <h3 class="plans__name">Unlimited</h3>
-              <div class="plans__explanation">∞ submissions/month<br/>to every agency</div>
-              <div class="plans__cost"><span class="cost__value" id="plancost_Unlimited">62.5</span> €/mo</div>
+              <div class="plans__explanation">∞ сабмитов в месяц<br/>на каждый сток</div>
+              <div class="plans__cost"><span class="cost__value" id="plancost_Unlimited">62.5</span> €/мес</div>
               <div class="select__wrapper">
                 <select name="select-box" class="select" id="planselpkg_Unlimited" onchange="document.getElementById('plancost_Unlimited').innerHTML = [100,83.33,70,62.5][this.selectedIndex]; document.getElementById('planbuy_Unlimited').href = 'https://accounts.stocksubmitter.com/purchasepackage?tariff=16&months=' + [1,6,12,24][this.selectedIndex]">
-                  <option value="item-1" >1 month</option>
-<option value="item-2" >6 months</option>
-<option value="item-3" >1 year</option>
-<option value="item-4"  selected="selected">2 years</option>
+                  <option value="item-1" >1 месяц</option>
+<option value="item-2" >6 месяцев</option>
+<option value="item-3" >1 год</option>
+<option value="item-4"  selected="selected">2 года</option>
                 </select>
               </div>
-              <a class="plans__button" id="planbuy_Unlimited" href="https://accounts.stocksubmitter.com/purchasepackage?tariff=16&months=24">Buy Now</a>
+              <a class="plans__button" id="planbuy_Unlimited" href="https://accounts.stocksubmitter.com/purchasepackage?tariff=16&months=24">Приобрести</a>
             </div>
           </div>
         </div>
@@ -938,7 +860,7 @@ it work?</span></h2>
         <div class="stats__inner">
           <div class="stats__content">
             <div class="stats__item">
-              <h3 class="stats__title"><span class="separator">Количество магазинов</span> <span class="separator">онлайн</span></h3>
+              <h3 class="stats__title"><span class="separator">Поддерживаемые</span> <span class="separator">агентства</span></h3>
               <div class="stats__count">40</div>
             </div>
             <div class="stats__item">
@@ -946,25 +868,12 @@ it work?</span></h2>
               <div class="stats__count">3 963</div>
             </div>
             <div class="stats__item">
-              <h3 class="stats__title"><span class="separator">Добавлено файлов</span> <span class="separator">сегодня</span></h3>
-              <div class="stats__count">36 259</div>
-            </div>
-            <div class="stats__item">
-              <h3 class="stats__title"><span class="separator">Добавлено файлов</span> <span class="separator">за всё время</span></h3>
-              <h3 class="stats__title"><span class="separator">Supported</span> <span class="separator">Agencies</span></h3>
-              <div class="stats__count">40</div>
-            </div>
-            <div class="stats__item">
-              <h3 class="stats__title"><span class="separator">Active</span> <span class="separator">Users</span></h3>
-              <div class="stats__count">3 963</div>
-            </div>
-            <div class="stats__item">
-              <h3 class="stats__title"><span class="separator">Submitted</span> <span class="separator">Today</span>
+              <h3 class="stats__title"><span class="separator">Сабмитов</span> <span class="separator">за сегодня</span>
               </h3>
               <div class="stats__count">36 259</div>
             </div>
             <div class="stats__item">
-              <h3 class="stats__title"><span class="separator">Submitted</span> <span class="separator">Total</span></h3>
+              <h3 class="stats__title"><span class="separator">Сабмитов</span> <span class="separator">за все время</span></h3>
               <div class="stats__count">615 689 370</div>
             </div>
           </div>
@@ -975,11 +884,11 @@ it work?</span></h2>
       <section class="stocks">
         <div class="stocks__inner">
           <div class="stocks__list">
-            <h2 class="stocks__title">Supported agencies</h2>
-            <p class="stocks__text stocks__text--queue">Currently in development: MotionArray</p>
+            <h2 class="stocks__title">Поддерживаемые агентства</h2>
+            <p class="stocks__text stocks__text--queue">На очереди: MotionArray</p>
              <div class="stocks__unlimited">
              <div class="stocks__unit">
-               <h3 class="stocks__subtitle">Unlimited submissions for everyone</h3>
+               <h3 class="stocks__subtitle">Бесплатный безлимит для всех</h3>
                <ul class="unlimited__list">
                  <li class="stocks__text">iStock ESP</li>
                  <li class="stocks__text">DreamsTime</li>
@@ -989,7 +898,7 @@ it work?</span></h2>
              </div>
              <div class="stocks__limited">
              <div class="stocks__unit">
-                <h3 class="stocks__subtitle">33 free submissions per month</h3>
+                <h3 class="stocks__subtitle">33 бесплатных сабмита в месяц</h3>
                <ul class="limited__list">
                  <li class="stocks__text">Shutterstock</li>
                  <li class="stocks__text">Bigstock</li>
@@ -1020,7 +929,7 @@ it work?</span></h2>
                </ul>
                </div>
                <div class="stocks__unit">
-                 <h3 class="stocks__subtitle">Only uploading</h3>
+                 <h3 class="stocks__subtitle">Только загрузка</h3>
                <ul class="limited__list">
                  <li class="stocks__text">PhotoDune</li>
                  <li class="stocks__text">MostPhotos</li>
@@ -1047,9 +956,6 @@ it work?</span></h2>
           <div class="contacts__list">
             <div class="contacts__resource">
               <h3 class="resource__title">Свяжитесь с нами</h3>
-              <a href="mailto:eschota@gmail.com" class="resource__item" target="_blank"><svg class="social__icon" viewBox="0 0 512 512"><use href="/app/assets/img/sprite.svg#envelope-solid"></use></svg> eschota@gmail.com</a>
-              <a href="https://t.me/YesDeadline" class="resource__item" target="_blank"><svg class="social__icon" viewBox="0 0 448 512"><use href="/app/assets/img/sprite.svg#telegram-plane-brands"></use></svg>@YesDeadline</a>
-              <h3 class="resource__title">Contact Us</h3>
               <a href="mailto:netherspite@stocksubmitter.com" class="resource__item" target="_blank"><svg class="social__icon" viewBox="0 0 512 512"><use href="/app/assets/img/sprite.svg#envelope-solid"></use></svg> netherspite@stocksubmitter.com</a>
               <a href="https://t.me/Netherspite" class="resource__item" target="_blank"><svg class="social__icon" viewBox="0 0 448 512"><use href="/app/assets/img/sprite.svg#telegram-plane-brands"></use></svg>@Netherspite</a>
               <a href=" https://microstock.plus/" class="resource__item" target="_blank">
@@ -1065,13 +971,13 @@ it work?</span></h2>
  microstock.plus</a>
             </div>
             <div class="contacts__resource contacts__resource--social">
-              <h3 class="resource__title  resource__title--social">News and Community</h3>
+              <h3 class="resource__title  resource__title--social">Новости и сообщества</h3>
               <div class="resource__grid">
-                <a href="https://www.facebook.com/Stock.Submitter.eng/" class="resource__item" target="_blank"><svg class="social__icon" viewBox="0 0 28.2 28"><use href="/app/assets/img/sprite.svg#facebook-square-brands"></use></svg>Facebook Community</a>
-                <a href="https://t.me/StockSubmitterChat" id="uix" class="resource__item" target="_blank"><svg class="social__icon" viewBox="0 0 448 512"><use href="/app/assets/img/sprite.svg#telegram-plane-brands"></use></svg>Telegram Group (Russian)</a>
-                <a href="https://vk.com/stocksubmitter" class="resource__item" target="_blank"><svg class="social__icon" viewBox="0 0 576 512"><use href="/app/assets/img/sprite.svg#vk-brands"></use></svg>VK Community (Russian)</a>
-                <a href="https://t.me/SSandMPNews" class="resource__item" target="_blank"><svg class="social__icon" viewBox="0 0 448 512"><use href="/app/assets/img/sprite.svg#telegram-plane-brands"></use></svg>News Channel (Russian)</a>
-                <a href="https://www.youtube.com/channel/UChjHZDylOyp536Bk3UFhSFQ/videos?view=0&sort=dd&shelf_id=0" class="resource__item" target="_blank"><svg class="social__icon" viewBox="0 0 81 56.7"><use href="/app/assets/img/sprite.svg#youtube-brands"></use></svg>Youtube Tutorials</a>
+                <a href="https://www.facebook.com/Stock.Submitter.rus/" class="resource__item" target="_blank"><svg class="social__icon" viewBox="0 0 28.2 28"><use href="/app/assets/img/sprite.svg#facebook-square-brands"></use></svg>Сообщество в Facebook</a>
+                <a href="https://t.me/StockSubmitterChat" id="uix" class="resource__item" target="_blank"><svg class="social__icon" viewBox="0 0 448 512"><use href="/app/assets/img/sprite.svg#telegram-plane-brands"></use></svg>Группа в Telegram</a>
+                <a href="https://vk.com/stocksubmitter" class="resource__item" target="_blank"><svg class="social__icon" viewBox="0 0 576 512"><use href="/app/assets/img/sprite.svg#vk-brands"></use></svg>Группа Вконтакте</a>
+                <a href="https://t.me/SSandMPNews" class="resource__item" target="_blank"><svg class="social__icon" viewBox="0 0 448 512"><use href="/app/assets/img/sprite.svg#telegram-plane-brands"></use></svg>Новостной канал</a>
+                <a href="https://www.youtube.com/channel/UChjHZDylOyp536Bk3UFhSFQ/videos?view=0&sort=dd&shelf_id=0" class="resource__item" target="_blank"><svg class="social__icon" viewBox="0 0 81 56.7"><use href="/app/assets/img/sprite.svg#youtube-brands"></use></svg>Видео туториалы на Youtube</a>
               </div>
             </div>
           </div>
@@ -1082,7 +988,6 @@ it work?</span></h2>
   <footer class="footer">
     <div class="container">
       <div class="footer__inner">
-        <a href="#" class="logo logo--lower" data-scroll="#intro"><img src="/app/assets/img/header/SS_Logo_wht.svg" width="25" height="31" alt=""><span class="logo__name">QWERTYSTOCK</span></a>
         <a href="#" class="logo logo--lower" data-scroll="#intro"><img src="/app/assets/img/header/SS_Logo_wht.svg" width="25" height="31" alt=""><span class="logo__name">StockSubmitter</span></a>
         <ul class="footer__paymentsystems">
           <li class="visa"><svg class="paymentsystems__icon"><use href="/app/assets/img/sprite.svg#cc-visa-brands"></use></svg></li>
@@ -1100,7 +1005,6 @@ it work?</span></h2>
     </style>
   </defs>
   <title>Мы принимаем Webmoney</title>
-  <title>We accept Webmoney</title>
   <path class="cls-1 wm-1" d="M179.83,28.5,162.17,10.67l-29.67,26L114,17.83l-54,49,34.33,39.5L82,118.67l33.83,39-12.83,13,48.5,54.5L181,198.33l26.83,30A128.25,128.25,0,1,1,128-.25a127.28,127.28,0,0,1,64,17.06Z" transform="translate(0.25 0.25)" />
   <rect class="cls-1" x="90.31" y="48.96" width="41.86" height="41.86" transform="translate(-17.87 93.05) rotate(-42.18)" />
   <rect class="cls-1" x="144.36" y="39.17" width="31.19" height="31.19" transform="translate(4.9 121.85) rotate(-42.18)" />
@@ -1146,9 +1050,6 @@ it work?</span></h2>
           <li><a href="/app/html/privacy.htm" target="_blank">Политика приватности</a></li>
           <li><a href="/app/html/termsofuse.htm" target="_blank">Условия использования</a></li>
           <li><a href="/app/html/refund.htm" target="_blank">Политика возврата</a></li>
-          <li><a href="/app/html/privacy.htm" target="_blank">Privacy Policy</a></li>
-          <li><a href="/app/html/termsofuse.htm" target="_blank">Terms of Use</a></li>
-          <li><a href="/app/html/refund.htm" target="_blank">Refund Policy</a></li>
         </ul>
       </div>
     </div>

@@ -18,13 +18,22 @@
 - `GET /health`, `GET /api/git/health` — `200` и тело `ok`.
 - `POST /api/git/webhook` — события GitHub (`push` в настроенную ветку → `git pull --ff-only` + перезапуск unit).
 
+## Лендинг StockSubmitter (зеркало)
+
+После `./scripts/fetch_binary_assets.sh` и блоков nginx для `/app.html` и `/app/` (см. `app/BINARY_ASSETS_SETUP.md`):
+
+- **`https://way.qwertystock.com/app.html`** — EN
+- **`https://way.qwertystock.com/app/ru.html`** — RU
+
 ## Публичный URL вебхука
 
 С учётом nginx на `way.qwertystock.com`:
 
 **`https://way.qwertystock.com/api/git/webhook`**
 
-В GitHub: Settings → Webhooks → Payload URL как выше, Content type `application/json`, Secret — тот же, что в `github_webhook.secret`.
+В GitHub: Settings → Webhooks → Payload URL как выше, **Secret** — тот же, что в `github_webhook.secret`.
+
+**Content type:** предпочтительно **`application/json`**. Если выбран **`application/x-www-form-urlencoded`**, сервер разбирает поле `payload` (поддержано с версии обработчика form-urlencoded). При несовпадении подписи ответ `401`, при неразобранном теле — `400` (см. Recent Deliveries в настройках вебхука).
 
 ## Сервис systemd
 

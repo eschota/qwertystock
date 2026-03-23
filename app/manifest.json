@@ -3,6 +3,8 @@
     "version": "0.1",
     "name": "QWERTYSTOCK",
     "short_name": "QWERTYSTOCK",
+    "name": "Stocksubmitter",
+    "short_name": "Stocksubmitter",
     "icons": [
         {
             "src": "assets/img/icons/android-chrome-192x192.png",
