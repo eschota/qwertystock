@@ -48,6 +48,12 @@
       gap: 1rem;
       flex-wrap: wrap;
     }
+    .top__right {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.25rem;
+    }
     .logo-link {
       display: flex;
       align-items: center;
@@ -66,6 +72,46 @@
       margin-left: 1.25rem;
     }
     .top__links a:hover { color: var(--qs-accent); }
+    .auth-bar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem 0.75rem;
+    }
+    .auth-badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.55rem;
+      border-radius: 2px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .auth-badge--in {
+      background: rgba(40, 160, 90, 0.35);
+      color: #c8f5d8;
+      border-color: rgba(180, 240, 200, 0.35);
+    }
+    .auth-badge--out {
+      background: rgba(0,0,0,0.25);
+      color: var(--qs-muted);
+    }
+    .auth-bar a.auth-link {
+      margin-left: 0;
+      padding: 0.35rem 0.75rem;
+      border: 1px solid rgba(255,228,158,0.45);
+      border-radius: 2px;
+      background: rgba(242,122,35,0.25);
+    }
+    .auth-bar a.auth-link:hover { background: rgba(242,122,35,0.45); }
+    .auth-user {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.92);
+      max-width: 14rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     main {
       flex: 1;
       display: flex;
@@ -125,6 +171,19 @@
       word-break: break-all;
     }
     .stamp strong { color: #c8d4e0; }
+    .version-line {
+      margin: 0.4rem 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 0.75rem;
+      align-items: baseline;
+    }
+    .version-line strong {
+      min-width: 11rem;
+      font-weight: 600;
+      color: #c8d4e0;
+    }
+    .version-line span { color: var(--qs-muted); word-break: break-all; }
     footer {
       padding: 1rem;
       text-align: center;
@@ -182,27 +241,70 @@
            title="Qwertystock — главная галерея">
           <img src="https://qwertystock.com/img/qwerty_logo.svg" width="210" height="32" alt="Qwertystock">
         </a>
+        <div class="top__right">
         <nav class="top__links">
           <a href="https://www.qwertystock.com/" target="_blank" rel="noopener noreferrer">Галерея</a>
           <a href="https://www.qwertystock.com/" target="_blank" rel="noopener noreferrer">Gallery</a>
         </nav>
+        <div class="auth-bar" id="auth-bar" aria-live="polite">
+          <span class="auth-badge auth-badge--out" id="auth-badge">…</span>
+          <span class="auth-user" id="auth-user-label" hidden></span>
+          <a class="auth-link" href="/auth/login" id="auth-link-login">Войти</a>
+          <a class="auth-link" href="/auth/logout" id="auth-link-logout" hidden>Выйти</a>
+        </div>
+        </div>
       </div>
     </header>
     <main>
+      <!-- template: qs-cabinet-oauth-v2 — если в браузере нет блока «Аккаунт» и кнопки «Войти» в шапке: git pull в %LocalAppData%\QwertyStock\repo и перезапуск сервера -->
+      <article class="card">
+        <div class="card__badge">Аккаунт</div>
+        <h1 style="font-size: 1.15rem;">Вход на qwertystock.com</h1>
+        <p class="sub" style="margin-bottom: 0.75rem;">
+          Статус синхронизируется с сервером: после входа на сайте вы возвращаетесь в этот кабинет.
+        </p>
+        <p class="en" style="margin-top: 0; padding-top: 0.75rem;">
+          <strong>EN:</strong> OAuth + PKCE to your QwertyStock account; this page shows whether the local session is signed in.
+        </p>
+        <p id="auth-detail" class="settings-hint" style="margin-top: 0.75rem; min-height: 1.2em;"></p>
+        <p class="sub" style="margin-top: 0.75rem; margin-bottom: 0; font-size: 0.82rem;">
+          API: <a href="/api/auth/me" style="color: var(--qs-accent);">/api/auth/me</a>
+        </p>
+      </article>
       <article class="card">
         <div class="card__badge">Локальная среда</div>
         <h1>Кабинет QwertyStock</h1>
+        <p class="sub" style="margin-bottom: 0.75rem;">
+          <strong>Вход в аккаунт</strong> — кнопка «Войти» в шапке страницы или эта же ссылка:
+          <a href="/auth/login" style="color: var(--qs-accent); font-weight: 600;">/auth/login</a>
+          (OAuth + PKCE на qwertystock.com).
+        </p>
         <p class="sub">
-          Это заглушка интерфейса. Если вы видите этот экран после обновления репозитория или переустановки —
-          веб-сервер подхватил свежую версию.
+          Номер <strong>версии продукта</strong> один и тот же у инсталлера, кабинета и файла
+          <code>version.json</code> на сервере обновлений. После автообновления репозитория здесь должен быть
+          актуальный <code>VERSION</code> из git; коммит смотрите в строке Git ниже (если задан).
         </p>
         <div class="en">
-          <strong>EN:</strong> This is a UI stub. If this page appears after a git sync or reinstall, your local
-          server is loading the latest bundle as intended.
+          <strong>EN:</strong> <code>productVersion</code> matches the Windows installer and the published update
+          manifest. If tray auto-sync works, this value tracks <code>VERSION</code> in the repo after pull.
         </div>
-        <div class="stamp" id="build-stamp">
-          <strong>Сборка / Build:</strong> {{BUILD_STAMP}}
+        <div class="stamp" id="version-block">
+          <div class="version-line">
+            <strong>Версия продукта · Product</strong>
+            <span>{{PRODUCT_VERSION}}</span>
+          </div>
+          <div class="version-line">
+            <strong>Python (рантайм)</strong>
+            <span>{{PYTHON_VERSION}}</span>
+          </div>
+          <div class="version-line">
+            <strong>Git (опц.) · Git (opt.)</strong>
+            <span>{{GIT_REVISION}}</span>
+          </div>
         </div>
+        <p class="sub" style="margin-top: 1rem; margin-bottom: 0; font-size: 0.82rem;">
+          JSON: <a href="/api/version" style="color: var(--qs-accent);">/api/version</a>
+        </p>
       </article>
       <article class="card">
         <div class="card__badge">Демон</div>
@@ -223,12 +325,56 @@
       </article>
     </main>
     <footer>
-      Визуальный стиль и ассеты — с <a href="https://www.qwertystock.com/" target="_blank" rel="noopener noreferrer">qwertystock.com</a>
+      Шаблон кабинета: OAuth v2 (PKCE)
+      · Визуальный стиль и ассеты — с <a href="https://www.qwertystock.com/" target="_blank" rel="noopener noreferrer">qwertystock.com</a>
       · шрифт Rubik (Google Fonts)
     </footer>
   </div>
   <script>
     (function () {
+      var badge = document.getElementById('auth-badge');
+      var userLabel = document.getElementById('auth-user-label');
+      var linkIn = document.getElementById('auth-link-login');
+      var linkOut = document.getElementById('auth-link-logout');
+      var detail = document.getElementById('auth-detail');
+      function refreshAuth() {
+        badge.textContent = '…';
+        fetch('/api/auth/me', { credentials: 'same-origin' })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (d && d.authenticated) {
+              badge.textContent = 'В сети';
+              badge.className = 'auth-badge auth-badge--in';
+              linkIn.hidden = true;
+              linkOut.hidden = false;
+              var u = d.user || {};
+              var parts = [];
+              if (u.name) parts.push(u.name);
+              if (u.email) parts.push(u.email);
+              var line = parts.length ? parts.join(' · ') : (u.sub ? String(u.sub) : 'Профиль');
+              userLabel.textContent = line;
+              userLabel.hidden = false;
+              detail.textContent = 'Вы авторизованы: ' + line;
+              detail.style.color = 'var(--qs-muted)';
+            } else {
+              badge.textContent = 'Не в сети';
+              badge.className = 'auth-badge auth-badge--out';
+              linkIn.hidden = false;
+              linkOut.hidden = true;
+              userLabel.hidden = true;
+              detail.textContent = 'Вы не авторизованы. Нажмите «Войти» — откроется сайт qwertystock.com.';
+              detail.style.color = 'var(--qs-muted)';
+            }
+          })
+          .catch(function () {
+            badge.textContent = '?';
+            badge.className = 'auth-badge auth-badge--out';
+            detail.textContent = 'Не удалось запросить /api/auth/me.';
+            detail.style.color = '#ff8a8a';
+          });
+      }
+      refreshAuth();
+
       var input = document.getElementById('poll-interval');
       var btn = document.getElementById('save-settings');
       var msg = document.getElementById('settings-msg');
