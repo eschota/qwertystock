@@ -2,3 +2,9 @@
 __pycache__/
 *.pyc
 .venv/
+
+# Production-only binary assets for the mirrored landing
+app/assets/fonts/*.woff2
+app/assets/img/icons/*.png
+!app/assets/fonts/.gitkeep
+!app/assets/img/icons/.gitkeep

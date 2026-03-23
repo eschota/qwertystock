@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap" rel="stylesheet" media="all" onload="this.media='all'">
+  <title>Refund Policy</title>
+  <meta name="description" content="Refund Policy for the Microstock.Plus services">
+</head>
+
+<body>
+  <style>
+  :root {
+    --root-font: 62.5%;
+    --white: #FFFFFF;
+    --main-title-color: #3b6256;
+    --main-text-color: #595959;
+    --green: #95c11f;
+
+  }
+
+  html {
+    height: 100%;
+    font-size: var(--root-font);
+    width: 100%;
+  }
+
+  body {
+    height: inherit;
+    margin: 0;
+    position: relative;
+    font-family: Open Sans, Verdana, sans-serif;
+    line-height: 1.4;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    color: var(--main-text-color);
+    line-height: 1.39;
+    background: var(--white);
+  }
+
+  .no-scroll {
+    overflow-y: hidden
+  }
+
+  button {
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    background: 0 0;
+    border: 0;
+    font-family: inherit;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  a {
+    text-decoration: none;
+    user-select: none;
+  }
+
+  *,
+  :after,
+  :before {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p {
+    margin: 0;
+  }
+
+  .privacy {
+    width: 100%;
+    padding: 3rem 1.5rem;
+    max-width: 120rem;
+    margin: 0 auto;
+  }
+
+  .privacy__select {
+    display: block;
+    margin-left: auto;
+    font-size: 1.6rem;
+    color: inherit;
+    font-family: inherit;
+  }
+
+  .privacy__main-title {
+    font-size: 4rem;
+    color: var(--main-title-color);
+    font-weight: 700;
+    margin-bottom: 3rem
+  }
+
+
+  .privacy__section {
+    font-size: 1.5rem;
+  }
+
+  .privacy__title {
+    font-size: 2.4rem;
+    color: var(--main-title-color);
+    font-weight: 700;
+    margin-bottom: 1.5rem
+  }
+
+  .privacy__section:not(:last-child) {
+    margin-bottom: 3rem;
+  }
+
+  .privacy__paragraph:not(:last-child) {
+    margin-bottom: 1rem;
+  }
+
+  .privacy__ol-alpha {
+    list-style-type: lower-alpha;
+    padding-left: 1.5rem;
+  }
+
+  .privacy__ol-common {
+    padding-left: 1.5rem;
+  }
+
+
+  .privacy__ol {
+    list-style-type: lower-roman;
+    padding-left: 1.5rem;
+  }
+
+  .privacy__ul {
+    margin-bottom: 1rem;
+  }
+
+  .privacy__li:not(:last-child) {
+    margin-bottom: 1rem;
+  }
+
+  .privacy__link {
+    word-break: break-all;
+    text-decoration: underline;
+    color: var(--green)
+  }
+
+  @media (max-width: 1200px) {
+
+    .privacy__main-title {
+      font-size: calc(2.8rem + 1.2 * ((100vw - 32rem)/ 88))
+    }
+
+    .privacy__title {
+      font-size: calc(1.8rem + .6 * ((100vw - 32rem)/ 88))
+    }
+
+    .privacy__section {
+      font-size: calc(1.4rem + .1 * ((100vw - 32rem)/ 88))
+    }
+  }
+  </style>
+  <script language="JavaScript">
+    const SetLang = function() {
+      const sel = document.getElementById('lang_select');
+      const lang = sel.options[sel.selectedIndex].value;
+      location.href = 'refund' + ((lang === 'en') ? '' : ('_' + lang)) + '.htm';
+    };
+  </script>
+  <article class="privacy">
+    <select class="privacy__select" id="lang_select" onchange="SetLang();">
+      <option value="ru">Russian</option>
+      <option value="en" selected>English</option>
+    </select>
+    <h1 class="privacy__main-title">Refund Policy</h1>
+    <section class="privacy__section">
+      <p class="privacy__paragraph">Effective Date: 29.03.2021</p>
+      <p class="privacy__paragraph">Current version is available at <a class="privacy__link" href="/html/refund.htm">https://stocksubmitter.com/html/refund.htm</a>.</p>
+    </section>
+    <section class="privacy__section">
+      <div class="privacy__text">
+        <p class="privacy__paragraph">At any time during your paid subscription you can cancel your subscription and request a refund for the remaining unused period of your paid subscription.</p>
+        <p class="privacy__paragraph">To do so, please contact our customer support via any of the following ways:</p>
+        <ul class="privacy__ul">
+          <li class="privacy__li">Telegram: Netherspite</li>
+          <li class="privacy__li">E-mail: <a class="privacy__link" href="mailto:netherspite@stocksubmitter.com">netherspite@stocksubmitter.com</a></li>
+          <li class="privacy__li">In-app live support chat</li>
+        </ul>
+        <p class="privacy__paragraph">We will need the following information to process your request: e-mail used to register your StockSubmitter/Microstock.Plus account; date, details (payment system used, invoice number, etc.) and amount of payment; a reason why you want to cancel your subscription.</p>
+        <p class="privacy__paragraph">After receiving such request we will refund you the cost of the unused period of your paid subscription via the payment system you paid for it minus payment system fee for the refund transaction.</p>
+        <p class="privacy__paragraph">It can take up to 72 hours for us to complete a refund after receiving the request.</p>
+        <p class="privacy__paragraph">Unused period of your subscription is the remaining part of your subscription period at the moment of receiving the refund request.</p>
+        <p class="privacy__paragraph">We reserve the right to subtract any payment gateway commissions we have paid from the amount of refunds.</p>
+        <p class="privacy__paragraph">You can request a refund only if you were using the software in accordance with our <a class="privacy__link" href="termsofuse.htm">Terms of Use</a>.</p>
+      </div>
+    </section>
+  </article>
+</body>
+
+</html>
