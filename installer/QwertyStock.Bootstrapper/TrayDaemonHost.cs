@@ -16,7 +16,7 @@ public sealed class TrayDaemonHost : IDisposable
     private readonly InstallerOrchestrator _orch;
     private readonly InstallerStateStore _store = new();
 
-    /// <summary>Сериализация долгого git/manifest/pip (BackgroundSyncRepositoryAsync) и ручного обновления.</summary>
+    /// <summary>Сериализация git/manifest/pip (BackgroundSyncRepositoryAsync); перезапуск Python — вне этого lock.</summary>
     private readonly SemaphoreSlim _repoSyncGate = new(1, 1);
 
     /// <summary>Сериализация остановки/запуска embed-python (watchdog и перезапуск после sync). Не зависит от долгого git.</summary>
@@ -137,12 +137,12 @@ public sealed class TrayDaemonHost : IDisposable
         await _repoSyncGate.WaitAsync(ct).ConfigureAwait(false);
         using var runCts = new CancellationTokenSource(TimeSpan.FromMinutes(25));
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, runCts.Token);
+        bool changed;
         try
         {
             _backgroundSyncRunCts = linked;
             _log.Info("Background repo sync: starting (git fetch/reset + pip)…");
             var sw = System.Diagnostics.Stopwatch.StartNew();
-            bool changed;
             try
             {
                 changed = await _orch.BackgroundSyncRepositoryAsync(linked.Token).ConfigureAwait(false);
@@ -154,17 +154,18 @@ public sealed class TrayDaemonHost : IDisposable
             }
 
             _log.Info(
-                $"Background repo sync completed in {sw.Elapsed.TotalSeconds:F1}s (cabinet restart: {changed}).");
-
-            if (changed)
-                await RestartServerForSyncAsync().ConfigureAwait(false);
+                $"Background repo sync completed in {sw.Elapsed.TotalSeconds:F1}s (cabinet restart pending: {changed}).");
         }
         finally
         {
             if (ReferenceEquals(_backgroundSyncRunCts, linked))
                 _backgroundSyncRunCts = null;
+            // Не держим lock во время WaitForHttpOk (до ~2 мин) — иначе ручной «Обновить» висит на семафоре.
             _repoSyncGate.Release();
         }
+
+        if (changed)
+            await RestartServerForSyncAsync().ConfigureAwait(false);
     }
 
     private bool TryAcquireSingletonMutex()
@@ -408,8 +409,10 @@ public sealed class TrayDaemonHost : IDisposable
             _log.Info("Tray: manual repository sync started");
 
             _backgroundSyncRunCts?.Cancel();
-            _log.Info("Tray: manual sync — cancelling in-flight background sync if any; waiting for repo sync lock…");
+            _log.Info("Tray: manual sync — restarting cabinet server first (no repo lock wait)…");
+            await RestartServerForSyncAsync().ConfigureAwait(true);
 
+            _log.Info("Tray: manual sync — waiting for repo sync lock (git/pip only)…");
             if (!await _repoSyncGate.WaitAsync(TimeSpan.FromSeconds(120)).ConfigureAwait(true))
             {
                 _log.Error("Tray: manual sync — repo sync lock not released within 120s after cancel.");

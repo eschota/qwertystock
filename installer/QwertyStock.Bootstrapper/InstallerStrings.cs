@@ -189,13 +189,13 @@ public static class InstallerStrings
 
     public static string TrayForceUpdateStartedBody =>
         IsRu
-            ? "Синхронизация с git (fetch, reset, pip)…"
-            : "Syncing with git (fetch, reset, pip)…";
+            ? "Перезапуск сервера кабинета, затем git (fetch, reset, pip)…"
+            : "Restarting cabinet server, then git (fetch, reset, pip)…";
 
     public static string TrayForceUpdateAlreadyCurrentBody =>
         IsRu
-            ? "Репозиторий уже актуален — новых коммитов нет. Сервер не перезапускался."
-            : "Repository is already up to date. Server was not restarted.";
+            ? "После git: репозиторий уже актуален. Первый перезапуск для принудительного обновления уже выполнен."
+            : "After git: repository is already up to date. Forced server reload was already applied first.";
 
     public static string TrayForceUpdateUpdatedBody =>
         IsRu
@@ -205,11 +205,11 @@ public static class InstallerStrings
     public static string TrayForceUpdateErrorTitle =>
         IsRu ? "Синхронизация не удалась" : "Sync failed";
 
-    /// <summary>Фоновый sync завис или не отменился: не удалось взять lock за отведённое время.</summary>
+    /// <summary>Git/pip lock не взят: сервер уже перезапущен в начале ручного обновления.</summary>
     public static string TrayForceUpdateLockWaitTimeoutBody =>
         IsRu
-            ? "Фоновая синхронизация не завершилась за 2 мин после отмены. Перезапустите QwertyStock."
-            : "Background sync did not finish within 2 minutes after cancel. Restart QwertyStock.";
+            ? "Сервер кабинета уже перезапущен, но git-синхронизацию начать не удалось (lock занят >2 мин). Повторите позже или перезапустите QwertyStock."
+            : "Cabinet server was already restarted, but git sync could not start (lock held >2 min). Retry later or restart QwertyStock.";
 
     public static string TrayForceUpdateCancelledOrTimeoutBody =>
         IsRu
