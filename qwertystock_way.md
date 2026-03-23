@@ -46,8 +46,13 @@ sudo journalctl -u qwertystock-way -f
 ```
 qwertystock_way.py          # точка входа
 qwertystock_way.json        # настройки
+qwertystock_way.md          # эта документация
 module/
   config.py                 # загрузка JSON
   api_git_webhook.py        # вебхук GitHub
   telegram_notify.py        # уведомления в Telegram
 ```
+
+## Push в GitHub
+
+На сервере должен быть настроен доступ: **SSH-ключ** в аккаунте или в Deploy keys репозитория, либо **PAT** в URL/`git credential`. Без этого `git push` с сервера завершится ошибкой аутентификации. С рабочей машины, где уже есть доступ: `git pull` / `git push` в `main`.
