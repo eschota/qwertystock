@@ -11,6 +11,7 @@ import logging
 import os
 import subprocess
 import threading
+from urllib.parse import parse_qs
 
 from module.config import get_config
 
@@ -71,6 +72,35 @@ def _restart_service() -> None:
         log.info("systemctl restart %s ok", _service_name())
 
 
+def _parse_push_payload(body: bytes, headers: dict[str, str]) -> dict | None:
+    """
+    GitHub: либо raw JSON (Content-Type: application/json),
+    либо form-urlencoded с полем payload (если в настройках вебхука выбран не JSON).
+    """
+    lower = {k.lower(): v for k, v in headers.items()}
+    ct = (lower.get("content-type") or "").split(";")[0].strip().lower()
+    text = body.decode("utf-8-sig", errors="replace")
+    if not text.strip():
+        log.warning("webhook: empty body")
+        return None
+    if ct == "application/x-www-form-urlencoded":
+        qs = parse_qs(text, keep_blank_values=True, strict_parsing=False)
+        pl = qs.get("payload")
+        if not pl or not pl[0]:
+            log.warning("webhook: form body without payload= field")
+            return None
+        try:
+            return json.loads(pl[0])
+        except json.JSONDecodeError as e:
+            log.warning("webhook: payload JSON error: %s", e)
+            return None
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as e:
+        log.warning("webhook: JSON parse error: %s, body_prefix=%r", e, text[:200])
+        return None
+
+
 def _schedule_pull_and_restart() -> None:
     def job() -> None:
         ok, msg = _git_pull()
@@ -97,9 +127,8 @@ def handle_git_webhook(body: bytes, headers: dict[str, str]) -> tuple[int, bytes
     if event != "push":
         return 200, json.dumps({"ok": True, "ignored": event}).encode()
 
-    try:
-        payload = json.loads(body.decode("utf-8"))
-    except json.JSONDecodeError:
+    payload = _parse_push_payload(body, headers)
+    if payload is None:
         return 400, b"bad json"
 
     ref = payload.get("ref") or ""
