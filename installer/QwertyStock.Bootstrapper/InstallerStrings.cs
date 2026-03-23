@@ -110,6 +110,11 @@ public static class InstallerStrings
     public static string ProgressPort =>
         IsRu ? $"Проверка порта {InstallerPaths.ServerPort}…" : $"Checking port {InstallerPaths.ServerPort}…";
 
+    public static string ProgressPortFreeing =>
+        IsRu
+            ? $"Порт {InstallerPaths.ServerPort} занят — завершаем процесс, который его слушает…"
+            : $"Port {InstallerPaths.ServerPort} is in use — stopping the process that holds it…";
+
     public static string ProgressServer => IsRu ? "Запуск веб-сервера…" : "Starting web server…";
 
     public static string ProgressWaitHttp =>

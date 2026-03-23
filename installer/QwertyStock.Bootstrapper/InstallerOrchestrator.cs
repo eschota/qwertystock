@@ -48,7 +48,7 @@ public sealed class InstallerOrchestrator
                 return StartupLaunchResult.OpenedCabinetAndExit;
             }
 
-            throw new InvalidOperationException(InstallerStrings.ErrorPortInUse);
+            await EnsurePortFreeAsync(null, ct).ConfigureAwait(false);
         }
 
         _server.Start(state);
@@ -134,8 +134,7 @@ public sealed class InstallerOrchestrator
         _store.Save(state);
 
         progress?.Report(new InstallProgress(ProgressSegments.PortEnd, InstallerStrings.ProgressPort, false));
-        if (await PortChecker.IsLocalPortInUseAsync(InstallerPaths.ServerPort, ct).ConfigureAwait(false))
-            throw new InvalidOperationException(InstallerStrings.ErrorPortInUse);
+        await EnsurePortFreeAsync(progress, ct).ConfigureAwait(false);
 
         progress?.Report(new InstallProgress(ProgressSegments.ServerEnd, InstallerStrings.ProgressServer, false));
         _server.Start(state);
@@ -187,5 +186,26 @@ public sealed class InstallerOrchestrator
         if (string.IsNullOrWhiteSpace(state.RequirementsTxtSha256))
             return false;
         return HttpHash.EqualsHex(state.RequirementsTxtSha256, hash);
+    }
+
+    /// <summary>Kills the process listening on <see cref="InstallerPaths.ServerPort"/> if the port is still busy.</summary>
+    private async Task EnsurePortFreeAsync(IProgress<InstallProgress>? progress, CancellationToken ct)
+    {
+        if (!await PortChecker.IsLocalPortInUseAsync(InstallerPaths.ServerPort, ct).ConfigureAwait(false))
+            return;
+
+        progress?.Report(new InstallProgress(ProgressSegments.PortEnd, InstallerStrings.ProgressPortFreeing, false));
+        _log.Info($"Port {InstallerPaths.ServerPort} is in use — attempting to terminate the owning process.");
+        PortProcessTerminator.TryKillProcessUsingPort(InstallerPaths.ServerPort, _log);
+        await Task.Delay(750, ct).ConfigureAwait(false);
+        for (var i = 0; i < 25; i++)
+        {
+            if (!await PortChecker.IsLocalPortInUseAsync(InstallerPaths.ServerPort, ct).ConfigureAwait(false))
+                return;
+            await Task.Delay(150, ct).ConfigureAwait(false);
+        }
+
+        if (await PortChecker.IsLocalPortInUseAsync(InstallerPaths.ServerPort, ct).ConfigureAwait(false))
+            throw new InvalidOperationException(InstallerStrings.ErrorPortInUse);
     }
 }
