@@ -1,18 +1,23 @@
 #!/usr/bin/env python3
 """
-Единая входная точка: HTTP-сервер (health + GitHub webhook).
+Единая входная точка: HTTP-сервер (health + GitHub webhook), уведомление в Telegram при старте.
+Настройки: qwertystock_way.json в корне репозитория.
 """
 from __future__ import annotations
 
 import logging
 import os
-import socketserver
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
+
+from module.config import get_config, load_config  # noqa: E402
+from module.telegram_notify import build_startup_message, send_message  # noqa: E402
+
+load_config()
 
 from module.api_git_webhook import handle_git_webhook  # noqa: E402
 
@@ -21,9 +26,6 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
 log = logging.getLogger("qwertystock_way")
-
-PORT = int(os.environ.get("QWERTYSTOCK_PORT", "8765"))
-BIND = os.environ.get("QWERTYSTOCK_BIND", "0.0.0.0")
 
 
 class AppHandler(BaseHTTPRequestHandler):
@@ -58,8 +60,19 @@ class AppHandler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    server = ThreadingHTTPServer((BIND, PORT), AppHandler)
-    log.info("qwertystock_way listening on %s:%s", BIND, PORT)
+    cfg = get_config()
+    srv = cfg.get("server") or {}
+    bind = srv.get("bind") or "0.0.0.0"
+    port = int(srv.get("port") or 8765)
+
+    msg = build_startup_message(cfg, ROOT)
+    if send_message(cfg, msg):
+        log.info("telegram startup notify sent")
+    else:
+        log.info("telegram startup notify skipped or failed")
+
+    server = ThreadingHTTPServer((bind, port), AppHandler)
+    log.info("qwertystock_way listening on %s:%s", bind, port)
     server.serve_forever()
 
 

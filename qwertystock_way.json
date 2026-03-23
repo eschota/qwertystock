@@ -1,0 +1,20 @@
+{
+  "server": {
+    "bind": "0.0.0.0",
+    "port": 8765
+  },
+  "git": {
+    "branch": "main",
+    "systemd_unit": "qwertystock-way.service",
+    "repo_path": "/home/debian/qwertystock"
+  },
+  "github_webhook": {
+    "secret": "8791035019:AAH-DuLegNOy6wlb6RhHFtihKbjgYQisfEI"
+  },
+  "telegram": {
+    "bot_token": "8791035019:AAH-DuLegNOy6wlb6RhHFtihKbjgYQisfEI",
+    "notify_chat_id": 223960353,
+    "notify_on_server_start": true,
+    "startup_message_template": "Qwertystock way: обновление применено, сервер запущен.\nРевизия: <code>{revision}</code>"
+  }
+}
