@@ -8,7 +8,7 @@
     <UseWPF>true</UseWPF>
     <AssemblyName>qwertystock</AssemblyName>
     <RootNamespace>QwertyStock.Bootstrapper</RootNamespace>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <Authors>QwertyStock</Authors>
     <Product>QwertyStock Bootstrapper</Product>
     <Description>Windows installer / launcher for QwertyStock local web server</Description>

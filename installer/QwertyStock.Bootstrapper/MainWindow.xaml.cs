@@ -1,5 +1,7 @@
+using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using XamlAnimatedGif;
 
@@ -14,15 +16,43 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         _orchestrator = new InstallerOrchestrator(_log);
+
         var gifUri = new Uri("pack://application:,,,/Assets/QS_LOGO.gif", UriKind.Absolute);
         AnimationBehavior.SetSourceUri(LogoImage, gifUri);
         AnimationBehavior.SetRepeatBehavior(LogoImage, RepeatBehavior.Forever);
+
+        var v = Assembly.GetExecutingAssembly().GetName().Version;
+        VersionText.Text = v is { Build: >= 0 }
+            ? $"v{v.Major}.{v.Minor}.{v.Build}"
+            : "v?";
     }
 
-    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void Window_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ButtonState == MouseButtonState.Pressed)
+        if (e.LeftButton != MouseButtonState.Pressed)
+            return;
+        if (IsDescendantOfCloseButton(e.OriginalSource as DependencyObject))
+            return;
+        try
+        {
             DragMove();
+        }
+        catch (InvalidOperationException)
+        {
+            // ignore: drag not started from client area in edge cases
+        }
+    }
+
+    private bool IsDescendantOfCloseButton(DependencyObject? source)
+    {
+        while (source != null)
+        {
+            if (ReferenceEquals(source, CloseButton))
+                return true;
+            source = VisualTreeHelper.GetParent(source);
+        }
+
+        return false;
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)

@@ -9,28 +9,34 @@
         AllowsTransparency="True"
         Background="Transparent"
         WindowStartupLocation="CenterScreen"
-        Icon="pack://application:,,,/Assets/app.ico">
+        Icon="pack://application:,,,/Assets/app.ico"
+        PreviewMouseLeftButtonDown="Window_PreviewMouseLeftButtonDown">
   <Border CornerRadius="14"
-          BorderBrush="#4DFFFFFF"
+          BorderBrush="#59FFFFFF"
           BorderThickness="1"
           Padding="0">
     <Border.Background>
       <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#FFF27A23" Offset="0" />
-        <GradientStop Color="#FFC41E1E" Offset="0.55" />
+        <GradientStop Color="#FFE0452E" Offset="0.45" />
+        <GradientStop Color="#FFC41E1E" Offset="0.72" />
         <GradientStop Color="#FF8B1530" Offset="1" />
       </LinearGradientBrush>
     </Border.Background>
+    <Border.Effect>
+      <DropShadowEffect BlurRadius="22"
+                        ShadowDepth="0"
+                        Opacity="0.42"
+                        Color="#FF2A0A0A" />
+    </Border.Effect>
     <Grid>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />
       </Grid.RowDefinitions>
 
-      <!-- Title bar -->
-      <Grid Grid.Row="0"
-            Margin="16,12,8,0"
-            MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+      <!-- Title -->
+      <Grid Grid.Row="0" Margin="18,14,10,0">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
@@ -47,13 +53,14 @@
                      Margin="0,2,0,0"
                      FontFamily="Segoe UI" />
         </StackPanel>
-        <Button Grid.Column="1"
+        <Button x:Name="CloseButton"
+                Grid.Column="1"
                 Width="32"
                 Height="32"
                 Padding="0"
                 FontSize="14"
                 Foreground="White"
-                Background="#33FFFFFF"
+                Background="#40FFFFFF"
                 BorderThickness="0"
                 Cursor="Hand"
                 Click="CloseButton_Click"
@@ -70,52 +77,67 @@
         </Button>
       </Grid>
 
-      <!-- Content -->
-      <StackPanel Grid.Row="1"
-                  Margin="24,16,24,24">
-        <Border Background="#2E000000"
-                CornerRadius="12"
-                Padding="16"
-                BorderBrush="#33FFFFFF"
-                BorderThickness="1">
-          <StackPanel>
-            <Image x:Name="LogoImage"
-                   Width="200"
-                   Height="200"
-                   Stretch="Uniform"
-                   HorizontalAlignment="Center"
-                   RenderOptions.BitmapScalingMode="HighQuality" />
+      <!-- Body -->
+      <Grid Grid.Row="1" Margin="22,14,22,20">
+        <StackPanel>
+          <Border Background="#1AFFFFFF"
+                  CornerRadius="14"
+                  Padding="18,16,18,20"
+                  BorderBrush="#40FFFFFF"
+                  BorderThickness="1">
+            <Border.Effect>
+              <DropShadowEffect BlurRadius="8" ShadowDepth="0" Opacity="0.2" Color="#FF000000" />
+            </Border.Effect>
+            <StackPanel>
+              <Image x:Name="LogoImage"
+                     Width="200"
+                     Height="200"
+                     Stretch="Uniform"
+                     HorizontalAlignment="Center"
+                     RenderOptions.BitmapScalingMode="HighQuality" />
 
-            <TextBlock x:Name="IntroText"
+              <TextBlock x:Name="IntroText"
+                         Margin="0,16,0,0"
+                         Foreground="#F8FFFFFF"
+                         FontSize="13"
+                         LineHeight="20"
+                         TextWrapping="Wrap"
+                         TextAlignment="Center"
+                         FontFamily="Segoe UI"
+                         Text="Сейчас будет установлено окружение: встроенный Python, portable Git, синхронизация репозитория и зависимостей. После этого откроется браузер на http://localhost:3000 — это ваш локальный кабинет QwertyStock." />
+            </StackPanel>
+          </Border>
+
+          <ProgressBar x:Name="ProgressBar"
+                       Height="10"
                        Margin="0,18,0,0"
-                       Foreground="#F5FFFFFF"
-                       FontSize="13"
-                       LineHeight="20"
-                       TextWrapping="Wrap"
-                       TextAlignment="Center"
-                       FontFamily="Segoe UI"
-                       Text="Сейчас будет установлено окружение: встроенный Python, portable Git, синхронизация репозитория и зависимостей. После этого откроется браузер на http://localhost:3000 — это ваш локальный кабинет QwertyStock." />
-          </StackPanel>
-        </Border>
+                       Minimum="0"
+                       Maximum="100"
+                       Value="0"
+                       Foreground="#FFFFE49E"
+                       Background="#38FFFFFF" />
 
-        <ProgressBar x:Name="ProgressBar"
-                     Height="10"
-                     Margin="0,20,0,0"
-                     Minimum="0"
-                     Maximum="100"
-                     Value="0"
-                     Foreground="#FFFFE49E"
-                     Background="#40FFFFFF" />
+          <TextBlock x:Name="StatusText"
+                     Margin="0,12,0,0"
+                     Foreground="White"
+                     TextWrapping="Wrap"
+                     FontSize="13.5"
+                     LineHeight="19"
+                     FontFamily="Segoe UI"
+                     Text="Запуск…" />
+        </StackPanel>
 
-        <TextBlock x:Name="StatusText"
-                   Margin="0,14,0,0"
-                   Foreground="White"
-                   TextWrapping="Wrap"
-                   FontSize="13.5"
-                   LineHeight="19"
+        <!-- Version: corner, no hit-test so drag works through label -->
+        <TextBlock x:Name="VersionText"
+                   VerticalAlignment="Bottom"
+                   HorizontalAlignment="Right"
+                   Margin="0,0,2,2"
+                   FontSize="11"
                    FontFamily="Segoe UI"
-                   Text="Запуск…" />
-      </StackPanel>
+                   Foreground="#8CFFFFFF"
+                   IsHitTestVisible="False"
+                   Text="v—" />
+      </Grid>
     </Grid>
   </Border>
 </Window>
