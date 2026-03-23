@@ -1,8 +1,8 @@
 {
     "manifest_version": 2,
     "version": "0.1",
-    "name": "Stocksubmitter",
-    "short_name": "Stocksubmitter",
+    "name": "QWERTYSTOCK",
+    "short_name": "QWERTYSTOCK",
     "icons": [
         {
             "src": "assets/img/icons/android-chrome-192x192.png",
