@@ -18,7 +18,7 @@ public sealed class TransferSpeedTracker
 
             var bps = ComputeBpsUnlocked();
             int? eta = null;
-            if (total is > 0 && received < total && bps >= 512)
+            if (total is > 0 && received < total && bps >= 1)
                 eta = (int)Math.Ceiling((total.Value - received) / bps);
 
             return new TransferProgress(received, total, bps, eta);

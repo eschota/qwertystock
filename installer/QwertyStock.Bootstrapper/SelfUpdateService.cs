@@ -33,8 +33,8 @@ public sealed class SelfUpdateService
         var name = Path.GetFileName(exePath);
         var staged = Path.Combine(dir, Path.GetFileNameWithoutExtension(name) + ".pending" + Path.GetExtension(name));
 
-        var http = InstallerHttp.Client;
         var effectiveProgress = MergeDownloadProgress(downloadProgress);
+        using var http = InstallerHttp.CreateLargeBinaryDownloadClient();
         await DownloadWithRetriesAsync(http, manifest, staged, effectiveProgress, ct).ConfigureAwait(false);
 
         if (!string.IsNullOrWhiteSpace(manifest.Sha256))
@@ -90,8 +90,8 @@ public sealed class SelfUpdateService
             var done = total is long t && received >= t;
             var first = bytesAtLastLog < 0 && received > 0;
             var step2MiB = received - Math.Max(0, bytesAtLastLog) >= 2L * 1024 * 1024;
-            // Пульс: даже если байты не растут (сеть «висит»), раз в ~20 с видно состояние.
-            var heartbeat = sinceLastLog.ElapsedMilliseconds >= 20_000 && received > 0;
+            // Пульс: даже если байты не растут (сеть «висит»), раз в ~5 с видно состояние.
+            var heartbeat = sinceLastLog.ElapsedMilliseconds >= 5_000 && received > 0;
             if (!done && !first && !step2MiB && !heartbeat)
                 return;
             bytesAtLastLog = received;
@@ -128,7 +128,7 @@ public sealed class SelfUpdateService
                     }
                 }
 
-                await HttpDownload.DownloadToFileAsync(http, manifest.Url, staged, downloadProgress, ct).ConfigureAwait(false);
+                await HttpDownload.DownloadLargeBinaryToFileAsync(http, manifest.Url, staged, downloadProgress, ct).ConfigureAwait(false);
                 return;
             }
             catch (Exception ex)

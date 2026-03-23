@@ -1,3 +1,5 @@
+using System.Net;
+
 namespace QwertyStock.Bootstrapper;
 
 /// <summary>HTTP GET в один поток с прогрессом. Параллельные Range-GET убраны — за прокси/CDN часто зависали.</summary>
@@ -14,7 +16,16 @@ internal static class HttpDownload
         string path,
         IProgress<TransferProgress>? progress,
         CancellationToken ct) =>
-        DownloadSingleToFileAsync(http, url, path, progress, ct);
+        DownloadSingleToFileAsync(http, url, path, progress, ct, preferHttp11: false);
+
+    /// <summary>Крупный статический бинарник: HTTP/1.1 снижает проблемы с HTTP/2 за некоторыми прокси/CDN.</summary>
+    public static Task DownloadLargeBinaryToFileAsync(
+        HttpClient http,
+        string url,
+        string path,
+        IProgress<TransferProgress>? progress,
+        CancellationToken ct) =>
+        DownloadSingleToFileAsync(http, url, path, progress, ct, preferHttp11: true);
 
     public static Task DownloadToFileAsync(HttpClient http, Uri url, string path, IProgress<TransferProgress>? progress, CancellationToken ct) =>
         DownloadToFileAsync(http, url.ToString(), path, progress, ct);
@@ -24,9 +35,16 @@ internal static class HttpDownload
         string url,
         string path,
         IProgress<TransferProgress>? progress,
-        CancellationToken ct)
+        CancellationToken ct,
+        bool preferHttp11)
     {
         using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        if (preferHttp11)
+        {
+            req.Version = HttpVersion.Version11;
+            req.VersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
+        }
+
         using var resp = await http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
         resp.EnsureSuccessStatusCode();
         var total = resp.Content.Headers.ContentLength;
