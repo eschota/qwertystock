@@ -1,0 +1,24 @@
+---
+description: Qwertystock browser QA for checkout, pricing, subscriptions, and downloads
+alwaysApply: true
+---
+
+# Qwertystock browser checkout testing
+
+- When the user asks to test Qwertystock in the browser, use the Codex in-app Browser plugin and test the live user flow, not only backend curl checks.
+- Use the dedicated QA account `qa-test-20260519@qwertystock.test` for destructive checkout/download coverage. Do not commit the QA password.
+- The QA account may have the hidden `QA Test` stock subscription entitlement with 1000 credits. This plan is for testing only and must stay hidden/inactive for public purchase.
+- Do not spend real PayPal money for broad matrix testing unless the user explicitly confirms the amount and the exact item/format to buy.
+- For launch pricing QA, cover all asset types: `photo`, `illustration`, `vector`, and `video`.
+- For each tested item, record the item id, asset type, title when visible, selected format/resolution, displayed price, checkout path, entitlement source, delivery mode, and download result.
+- Test every format/resolution that the UI exposes for the selected item. If a type does not expose a format, record that as UI coverage, not a failure.
+- Verify one-off purchase behavior separately from subscription entitlement when requested. Subscription downloads must not create fake zero-dollar cart invoices.
+- If an admin account is given a QA subscription, subscription entitlement must be tested before admin download bypass. A subscription download must create a `subscriptionusage` record unless the same item/format was already recorded inside the dedupe window or the file was already bought.
+- Verify the download pipeline after entitlement: direct original, browser image resize, server fallback, vector direct delivery, and video server transcode/cache where applicable.
+- Use low-resolution video first for server transcode QA. Do not run wide video-transcode batches during peak traffic.
+- Confirm downloaded files by filename, MIME/extension, and dimensions or codec metadata when practical.
+- If browser QA exposes an obvious checkout/download UX bug, fix it immediately with a small versioned deploy before continuing the matrix.
+- Checkout and download UI should follow modern microstock behavior: clear separate actions for preview, cart, and licensed file download; no duplicate button labels; no repeated legal warning before each download.
+- Telegram notifications must go to the `Qwerty` topic and stay short in Russian. Do not spam repeated download retries; expect dedupe for repeated clicks.
+- After destructive QA, reset temporary subscription usage/cart/invoice noise when it is safe and relevant to the test goal.
+- Keep failed test evidence concrete: URL, visible UI state, API response when available, and exact next fix needed.
