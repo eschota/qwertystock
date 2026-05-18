@@ -15,8 +15,7 @@ alwaysApply: true
 - Known baseline failures, such as the inherited degraded RAID state observed on 2026-05-18, must not repeat-alert every monitor cycle. Notify only on first discovery, meaningful state change, or recovery.
 - Every production deploy must have a version identifier: git SHA or explicit release version. The notification must include that version.
 - Production deploys should use versioned release directories and an atomic `current` symlink switch when possible.
-- Git commit and push events for the qwertystock main-site repo must notify the `Qwerty` topic with a short Russian message.
-- Git notifications must include the project version, starting from `0.0.01`, plus branch and short commit SHA when available.
-- Git notification hooks must not store Telegram bot tokens in tracked files. Use environment variables, `.git/qwertystock-notify.env`, or server-side secret files.
-- Normal delivery flow: test locally, bump `VERSION`, push `main`, GitHub webhook calls production, production fetches/builds/restarts, then production sends the final deploy notification.
+- Git commit and push events must not send Telegram messages directly from a developer machine.
+- Normal delivery flow: test locally, bump `VERSION`, push `main`, GitHub webhook calls production, production fetches/builds/restarts, then production sends the only deploy notification.
+- The final deploy notification must include the new version, short commit SHA, and commit subject/description. Do not duplicate the obvious "deploy applied" wording when the version bump already proves it.
 - The production deploy webhook must verify GitHub `X-Hub-Signature-256` and accept only `push` events for `refs/heads/main`.
