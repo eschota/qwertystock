@@ -1,0 +1,20 @@
+---
+description: qwertystock.com primary production server
+alwaysApply: true
+---
+
+# qwertystock.com primary production server
+
+Treat `145.239.0.57` as the primary production server for qwertystock.com.
+
+- SSH: `generic@145.239.0.57 -p 22744`
+- Local key path: `C:\Users\escho\.ssh\qs_kos.key`
+- Current public domain: `https://qwertystock.com`
+- Current nginx routing: `/` -> `127.0.0.1:8000`, `/search` -> `127.0.0.1:8005`, `/data` and `/payments` -> `127.0.0.1:8001`
+- Current inherited runtime: PM2 `qwertystock`, PM2 `qwertydata`, systemd `qwertysearch.service`
+- New main-site repo target: private `eschota/qwertystock-main-site`
+- Service notifications must go only to the Telegram forum topic `Services` in chat `-1003904421498`
+
+Do not do risky production cutover work until backups exist and the degraded
+RAID1 state has been investigated. `/dev/md3` and `/dev/md4` were observed
+degraded on 2026-05-18.
