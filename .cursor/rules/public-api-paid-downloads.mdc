@@ -1,0 +1,19 @@
+---
+description: Qwertystock public API keys, search, preview, and paid downloads
+alwaysApply: true
+---
+
+# Qwertystock public API and paid downloads
+
+- Public API lives on the primary sales site `https://qwertystock.com`, not on `way.qwertystock.com`.
+- The API entry page is `/api`; it must show docs for guests and create a default API key only for authenticated users.
+- API keys must use `qs_live_<prefix>_<secret>`, store only a peppered hash, and never be logged or sent to Telegram in full.
+- The pepper comes from `QWERTYSTOCK_API_KEY_PEPPER`; if it is missing, fix env config before treating API auth as production-ready.
+- Free API preview delivery must return existing watermarked preview URLs and must not require an API key.
+- Paid API file delivery requires `Authorization: Bearer <API_KEY>` and debits `usersdata.balance` only after a ready file/link is available.
+- A paid API delivery is a permanent purchase: write the item to `bought`; repeated same/lower format delivery must charge `0`; upgrades charge only the price difference.
+- API image delivery must use server-side generation/fallback, not browser canvas resize.
+- API video delivery may return `processing` with progress/retry timing until the local transcoded file is ready.
+- Telegram notifications for API page visits, key creation/rotation/revoke, and paid API purchases go only to the `Qwerty` topic and must be short in Russian.
+- Test API changes on owner QA account `userid: Sdfg4ETyjKos1P` with controlled `usersdata.balance`; do not spend PayPal money for API matrix tests.
+- Every API change must be covered by: local root/data build, `/api` browser smoke, free preview request, missing/invalid key checks, insufficient balance, paid charge, repeat no-charge, and upgrade diff.
