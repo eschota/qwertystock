@@ -8,6 +8,9 @@ alwaysApply: true
 - Public API lives on the primary sales site `https://qwertystock.com`, not on `way.qwertystock.com`.
 - The API entry page is `/api`; it must show docs for guests and create a default API key only for authenticated users.
 - API keys must use `qs_live_<prefix>_<secret>`, store only a peppered hash, and never be logged or sent to Telegram in full.
+- Users may have multiple active API keys; each key must be trackable separately by prefix/id, request count, last use, downloads, and spend.
+- The `/api` page must let users create, rotate, and revoke keys without page reload, and show per-key usage graphs rather than one shared account-level counter.
+- The `/api` page must keep a high-priority AI Agents instruction block. Its copy button must copy a complete agent instruction including one usable API key, show the user that the text is already in the clipboard, and send a short Telegram notification without including the full key.
 - The pepper comes from `QWERTYSTOCK_API_KEY_PEPPER`; if it is missing, fix env config before treating API auth as production-ready.
 - Free API preview delivery must return existing watermarked preview URLs and must not require an API key.
 - Paid API file delivery requires `Authorization: Bearer <API_KEY>` and debits `usersdata.balance` only after a ready file/link is available.
