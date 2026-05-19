@@ -1,0 +1,42 @@
+---
+description: Qwertystock sitemap crawler observability and search-engine crawl-window rules
+alwaysApply: true
+---
+
+# Qwertystock sitemap crawler observability
+
+- Treat Google/Bing/Yandex sitemap reads as a first-class SEO operations signal.
+- Production must run `qwertystock-sitemap-access-watcher.service` to watch nginx
+  access logs for `/sitemap.xml` and `/sitemaps/*.xml.gz`.
+- The watcher must notify Telegram chat `-1003904421498`, topic id `514`.
+- Notify immediately when a target crawler session starts reading sitemap files.
+- Default Telegram notifications should be target-only:
+  `Googlebot,Bingbot,YandexBot`. Use all-reader notifications only for temporary
+  diagnostics.
+- A crawler session is grouped by crawler family, IP, and User-Agent; sequential
+  sitemap chunk downloads must update one Telegram message instead of sending a
+  message per chunk.
+- Track at least: crawler family, IP, User-Agent, first read time, last read
+  time, request count, distinct sitemap files, latest path, status, and bytes.
+- The daily QS indexing Telegram status must include a compact crawler summary
+  for Googlebot, Bingbot, and YandexBot: either latest sitemap fetch stats or
+  `ждём` when no fetch has been observed yet.
+- The daily QS indexing Telegram status must include embedding health: indexed
+  rows with embeddings, total qwertysearch rows, embedding coverage percent,
+  missing-embedding queue, configured `--max-embedding-count`, limit utilization,
+  free capacity, or overflow.
+- Target crawler families are Googlebot/Google inspection agents,
+  Bingbot/Microsoft indexing agents, and YandexBot/Yandex image/search agents.
+- User-Agent detection is acceptable for operational reporting. Do not use it
+  for security enforcement without reverse DNS or ASN verification.
+- Use observed crawler fetch windows to tune the daily
+  `qwertystock_daily_indexer.py` cron time. The sitemap build must finish before
+  the recurring crawler fetch window with a safety buffer.
+- Sitemap regeneration and crawler monitoring must be separate concerns:
+  `qwertystock_daily_indexer.py` builds and reports sitemap state;
+  `qwertystock_sitemap_access_watcher.py` reports external crawler reads.
+- Do not treat sitemap reads as proof of item indexing. They only prove sitemap
+  discovery/fetch. Continue validating Search Console, Bing Webmaster Tools,
+  Yandex Webmaster, and sampled external-bot page checks.
+- Do not submit the full catalog to IndexNow daily. IndexNow remains for
+  changed/new/deleted URL deltas only.
