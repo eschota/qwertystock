@@ -1,0 +1,4 @@
+interface:
+  display_name: "Qwertystock Brand Design"
+  short_description: "Apply the Qwertystock QS orbit brand system."
+  default_prompt: "Use the Qwertystock brand design system for this UI or asset task."

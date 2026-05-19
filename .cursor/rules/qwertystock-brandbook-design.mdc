@@ -1,0 +1,16 @@
+---
+description: Qwertystock brandbook and design asset rule
+alwaysApply: true
+---
+
+# Qwertystock brandbook and design
+
+- The canonical Qwertystock brandbook lives in `R:\qwertystock\rule_brendbook_design`.
+- The canonical logo is the blue/cyan QS orbit mark, not the old pink outline `Q`.
+- All new brand/design assets must be kept under `R:\qwertystock\rule_brendbook_design\assets` and mirrored into the production repo only when needed.
+- Main-site web logo assets live in `R:\M_plus_front\qwertystock\client\public\img\brand`.
+- Browser/app icons live in `R:\M_plus_front\qwertystock\client\public\img\icons`.
+- Side rail brand UI must render the logo image, never plain text `Q`.
+- The brand system uses dark neutral UI with cyan/blue/violet logo accents. Existing Qwertystock pink may remain for primary action buttons.
+- When updating logo/favicon/brand visuals, update `site.webmanifest`, `browserconfig.xml`, favicon links, Open Graph image tags, and smoke test `/`, `/item?id=3295318`, `/api`.
+- Deploy brand changes only with `VERSION` bump and GitHub `main` push, then wait at least 30 seconds before production verification.
