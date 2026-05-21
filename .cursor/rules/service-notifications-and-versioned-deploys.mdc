@@ -17,5 +17,6 @@ alwaysApply: true
 - Production deploys should use versioned release directories and an atomic `current` symlink switch when possible.
 - Git commit and push events must not send Telegram messages directly from a developer machine.
 - Normal delivery flow: test locally, bump `VERSION`, push `main`, GitHub webhook calls production, production fetches/builds/restarts, then production sends the only deploy notification.
+- After pushing `main`, wait at least 30 seconds before checking production deploy state, browser UI, or Telegram deploy notification. The production webhook needs time to fetch, build, restart PM2, and write `last_deploy.json`; checking earlier creates false negatives.
 - The final deploy notification must include the new version, short commit SHA, and commit subject/description. Do not duplicate the obvious "deploy applied" wording when the version bump already proves it.
 - The production deploy webhook must verify GitHub `X-Hub-Signature-256` and accept only `push` events for `refs/heads/main`.

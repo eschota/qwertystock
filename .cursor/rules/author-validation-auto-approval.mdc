@@ -1,0 +1,28 @@
+---
+description: Qwertystock author validation and bulk approval rule
+alwaysApply: true
+---
+
+# Qwertystock author validation and bulk approval
+
+- `/adminapprove` is the critical author validation page for Qwertystock contributors.
+- Pending authors on `/adminapprove` are users with `approvedata.state = "waitforapproval"`.
+- Approving an author must set `approvedata.state` to `approved` through the existing admin approve API, not by direct Mongo edits, unless production recovery explicitly requires manual DB repair.
+- Bulk approval is allowed only for authors currently waiting for validation and only from an authenticated admin session with the `approve` right.
+- Bulk approval must take a snapshot of the pending queue, approve authors sequentially, and show progress with success/failure counts.
+- Bulk approval must not auto-run just because the admin page was opened. It must require an explicit admin action on the page.
+- Rejections remain manual and must include a useful correction comment for the author.
+- This workflow is important for onboarding supply into the catalog; do not remove or hide the bulk approve control without replacing it with an equivalent admin-safe workflow.
+- When changing this flow, test `/adminapprove`, `/data/getwaitapprovedata`, `/data/getwaitapprovecount`, and `/data/setapprovestatus`.
+
+## Paid M+ Author Fast-Track
+
+- Any Microstock+ author who has ever had at least one real paid M+ invoice is force-enabled and force-validated for Qwertystock supply ingestion. The subscription does not need to be active now.
+- Treat one historical paid M+ purchase as enough trust for catalog onboarding; document/KYC verification is deferred until author payout/withdrawal.
+- Do not create fake Qwertystock user accounts solely for this. Durable forced validation belongs in `qwertydata.prefs` key `forcedapprovedmpuserids`, which is merged with normal `usersdata.approvedata.state = "approved"` during qwertysearch verified-user sync.
+- Force-enabling must also set ContentDB user config `enableqwertystock = 1`; when the intent is to sell their catalog, set qwertycore contributor data `qsautosubmit = 1`.
+- Paid-author Qwertystock backfill must use the raw ContentDB file list and must not use the old `getonsalelist` / Adobe Stock / Shutterstock approval gate to exclude files.
+- For paid M+ authors, all ContentDB files should be queued for QwertySearch initialization/sale indexing unless the file is deleted, technically unreadable, or legally blocked.
+- This rule applies to all existing paid M+ authors and to future paid M+ authors automatically through the production backfill/sync job.
+- Always dry-run first: count ever-paid M+ users, already-active ContentDB users, already-approved qwertydata users, missing QS users, and resulting qwertysearch active+verified users.
+- Keep a dated backup/export of the affected M+ userid list and previous QS state before applying bulk changes.

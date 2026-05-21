@@ -1,0 +1,21 @@
+---
+description: Qwertystock contributor verification and upload onboarding rule
+alwaysApply: true
+---
+
+# Qwertystock contributor verification
+
+- `approvedata.state = "approved"` means the user has passed Qwertystock seller verification. Do not tell approved users to click "Start verification".
+- The "Sell my content" toggle in Microstock+ only enables/disables Qwertystock sales from that tool. It is not the verification state and must not downgrade an approved user to incomplete.
+- The Qwertystock web profile currently does not provide direct file upload. Approved sellers upload through Microstock+ uploader and should enable QwertyStock in Microstock+ agency settings.
+- `/profile?tab=myfiles` is not a valid upload destination on qwertystock.com. Use `/profile?tab=dashboard` for seller onboarding or the public author search URL for existing files.
+- When approving an author from `/adminapprove`, refresh the search verified-user list immediately so the seller can be discovered without waiting for the periodic sync.
+- Support answer for approved sellers: "Your QwertyStock seller profile is active. Open Microstock+ uploader, enable QwertyStock / Sell my content in agency settings, save, then upload files there."
+
+## Paid M+ automatic validation
+
+- If a Microstock+ author has ever had at least one real paid M+ invoice, Qwertystock must treat the author as trusted for catalog onboarding even if their current M+ subscription is inactive.
+- For paid M+ authors, document/KYC checks move to payout/withdrawal time and must not block catalog publication.
+- Paid M+ authors must be force-enabled in Qwertystock and their ContentDB files must be queued for QwertySearch sale indexing from the raw ContentDB file list.
+- Do not require Adobe Stock or Shutterstock approval as a precondition for Qwertystock sale indexing for paid M+ authors.
+- Future paid M+ authors must be picked up automatically by the paid-author backfill/sync job; do not rely on one-off manual author fixes.

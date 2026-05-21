@@ -1,0 +1,33 @@
+---
+description: Qwertystock product catalog SEO and sitemap source rules
+alwaysApply: true
+---
+
+# Qwertystock product catalog SEO and sitemap
+
+- The sitemap/catalog source of truth is the visible qwertystock catalog API, not MongoDB user containers and not raw `qwertysearch.items`.
+- On the inherited server, the qwertysearch API caps each response to about 500 items. Daily sitemap generation may union newest API pages with read-only PostgreSQL `public.items where is_on_sale` IDs and read-only Mongo `qwertysearch.items where isOnSale=true` IDs after repeated API pages are fully DB-known, but must not include raw non-sale rows.
+- Every PostgreSQL or Mongo fallback ID must be verified through the public qwertystock sitemap/item export before sitemap output. If the public API does not return the item, keep it out of sitemap.
+- Video sitemap generation must walk the visible API to the full video count so all visible videos can receive video sitemap metadata; use DB only as fallback for non-video URL coverage or if API export fails short.
+- Missing `/item?id=<id>` pages must return HTTP 404 or 410, never redirect to `/`.
+- Filtered/search/sort/auth/cart/profile/purchase URLs must be `noindex,follow` unless they are intentionally promoted to full SEO landing pages with unique SSR content and self-canonical URLs.
+- Audit date 2026-05-18: visible catalog count is 1,133,357 sellable/searchable products: photo 541,026; illustration 174,971; vector 171,761; video 245,599.
+- Fast-track audit date 2026-05-19: after enabling active paid M+ authors for QS sale eligibility, qwertysearch has 1,655,289 sellable/searchable products and sitemap emits all of them: photo 853,616; illustration 230,486; vector 275,737; video 295,450.
+- Raw PostgreSQL `qwertysearch.items` is a 30 GB search/embedding index and may miss newest public products.
+- Product canonical URL v1 is `https://qwertystock.com/item?id=<id>`. Do not introduce slug URLs until a separate migration adds canonical/301 handling.
+- Product page `<title>`, meta description, and meta keywords must be unique per product; include the product id when item titles/descriptions may repeat.
+- Do not truncate product page source HTML `<title>` with literal ellipses; keep the full asset title plus type, item id, and Qwertystock brand.
+- Sellable item pages must be marked as Schema.org `Product`; when a public price is available, include nested `Offer` data with price, USD currency, in-stock availability, new condition, seller, and canonical URL.
+- Photo, illustration, and vector product pages must include Schema.org `ImageObject` for the displayed preview image, with content URL, thumbnail, dimensions, encoding format, and stable upload date when available.
+- Video product pages need separate video SEO: `VideoObject` JSON-LD and video sitemap tags. Keep video `name/title`, `description`, thumbnail, content URL, duration, and publication/upload date when available.
+- SEO uniqueness must be audited separately with the catalog export endpoint before major sitemap/indexing releases.
+- Sitemap files must use absolute canonical URLs, UTF-8 XML, <= 50,000 URLs per file, and <= 50 MB uncompressed per file.
+- Photo, illustration, and vector sitemap files must include Google image sitemap tags and should use smaller chunks, currently <= 25,000 URLs per file.
+- Video sitemap files include large metadata and should use smaller chunks, currently <= 10,000 URLs per file.
+- Full catalog audits and sitemap generation must be read-only, rate-limited, and preferably off-peak.
+- `robots.txt` must reference `https://qwertystock.com/sitemap.xml`.
+- Product sitemap URL `<lastmod>` must use a stable item publication/update date from the public catalog export when available; do not stamp every product URL with the daily generation date.
+- Any SEO-visible change that creates, updates, removes, canonicalizes, redirects, or changes indexability for public URLs must be followed by indexing work: submit only the affected changed/new/deleted canonical URLs through IndexNow, then validate discovery/indexing status in Bing Webmaster Tools and Google Search Console or their available URL inspection/sitemap reports.
+- IndexNow is required for Bing realtime indexing deltas, but it is only for changed/new/deleted URLs, not a daily full-catalog blast.
+- For Google and other search engines, always validate via sitemap submission/status, URL Inspection/live test where available, and sampled external-bot checks; do not assume sitemap generation alone means indexing succeeded.
+- Qwertystock IndexNow key file is `https://qwertystock.com/cf56a690f23b4811bb52bfb2db986d4e.txt`; submit deltas with `ops/submit_indexnow_urls.py` or the queue file `/home/generic/qwertystock-indexnow-queue.txt`.

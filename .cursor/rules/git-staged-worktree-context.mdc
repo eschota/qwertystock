@@ -1,0 +1,23 @@
+---
+description: Qwertystock git staged and dirty worktree context handling
+alwaysApply: true
+---
+
+# Git staged and dirty worktree context handling
+
+- When this repo already has staged, modified, or untracked files after context
+  compaction or a resumed task, do not automatically call them "foreign" or
+  unrelated.
+- First inspect `git status`, staged diff, unstaged diff, and untracked file
+  contents. Match each file to recent Qwertystock tasks, rules, deploy notes,
+  or production fixes before deciding whether it belongs in the current commit.
+- If a file is clearly a temporary artifact, editor scratch file, build output,
+  dump, key, log, or unrelated generated data, leave it out and mention it.
+- If staged files are safe and match the project context, preserve and commit
+  them together with the related rule/code changes instead of dropping them.
+- Never revert, reset, unstage, or overwrite existing work just because the
+  current summarized context did not mention it. If the diff is unclear, read it
+  and decide conservatively; ask only when it cannot be safely classified.
+- Before pushing, verify that the commit does not include secrets, dumps,
+  runtime caches, `node_modules`, built assets that should be generated, or
+  one-off local scratch files.

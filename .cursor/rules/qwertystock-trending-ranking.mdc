@@ -1,0 +1,37 @@
+---
+description: Qwertystock trending ranking source and UI rules.
+globs:
+  - "R:/M_plus_front/qwertystock/**"
+  - "R:/M_plus_front/m_plus_trends/**"
+  - ".cursor/rules/qwertystock-trending-ranking.mdc"
+alwaysApply: false
+---
+
+# Qwertystock Trending Ranking
+
+- Search UI must expose only two sort tabs: `Трендовые` (`sort=trend`) and
+  `Новые` (`sort=new`). `Трендовые` is the default.
+- `Трендовые` is a sort mode for the full matching catalog, not a filter. Do
+  not hide files with low or zero trend score.
+- Do not show MPR/RPM/trend score in Qwertystock UI, product cards, product
+  pages, public API responses, or customer-facing copy unless the user
+  explicitly asks for an internal diagnostic screen.
+- Qwertystock trend scores are calculated only through M+ Trends V2 on Way
+  (`way.qwertystock.com/m-plus-trends`) using Adobe top keyword data that was
+  ingested by the Freestock Desktop Node pipeline.
+- Qwertystock must not crawl Adobe directly for trends: no direct HTTP,
+  Playwright, Chromium, proxy pool, or local Codex browser as a production
+  trends parser.
+- M+ Trends V2 provides Qwertystock ranking through the signed/internal bulk
+  endpoint `POST /api/trends/qwertystock-rank`.
+- Rank photo, illustration, vector, and video separately by their own content
+  group. Never compare video keywords against photo-only trend rows, or vector
+  against illustration/photo rows.
+- QwertySearch stores only the final internal `ratings.trend` score in the
+  `0..100` range. M+ may keep its existing MPR naming internally, but
+  Qwertystock code should treat the stored value as `trend_score`.
+- New files should receive a trend score during QwertySearch initialization.
+  Daily full refresh should run off-peak, by type, in batches, and report a
+  compact summary of refreshed counts and errors.
+- Old links or state with `tab=ourchoice` or `tab=top` must degrade to
+  `tab=trend` without errors.

@@ -12,8 +12,9 @@ Treat `145.239.0.57` as the primary production server for qwertystock.com.
 - Current public domain: `https://qwertystock.com`
 - Current nginx routing: `/` -> `127.0.0.1:8000`, `/search` -> `127.0.0.1:8005`, `/data` and `/payments` -> `127.0.0.1:8001`
 - Current inherited runtime: PM2 `qwertystock`, PM2 `qwertydata`, systemd `qwertysearch.service`
+- PM2 `qwertystock` needs `QS_NET_SIGN_KEYS` in its environment; do not use `pm2 restart qwertystock --update-env` unless that env is loaded first, then run `pm2 save`.
 - New main-site repo target: private `eschota/qwertystock-main-site`
-- Service notifications must go only to the Telegram forum topic `Services` in chat `-1003904421498`
+- Qwertystock service and product-flow notifications must go only to the Telegram forum topic `Qwerty` in chat `-1003904421498`
 
 Do not do risky production cutover work until backups exist and the degraded
 RAID1 state has been investigated. `/dev/md3` and `/dev/md4` were observed

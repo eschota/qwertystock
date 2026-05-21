@@ -1,0 +1,38 @@
+---
+description: WAY qwertystock subdomain services
+alwaysApply: true
+---
+
+# WAY qwertystock services
+
+Treat `way.qwertystock.com` as our qwertystock subdomain. All services running
+behind this host are part of the project infrastructure, but this host is not
+the main sales website.
+
+- Public host: `https://way.qwertystock.com`
+- SSH alias: `way-fr`
+- Host: `37.187.57.177`
+- SSH user: `debian`
+- SSH port: `22744`
+- Local SSH key: `C:\Users\escho\.ssh\id_rsa_qwerty_vpn`
+- WAY app/repo path: `/home/debian/qwertystock`
+
+Known services on WAY:
+
+- `qwertystock-way.service`
+- `qwertystock_support_bot.service`
+- Support chat: `https://way.qwertystock.com/support-chat/`
+- Detectron: `https://way.qwertystock.com/detectron/`
+
+Before changing any WAY service, first inspect current nginx, systemd, and
+process state on the server. Multiple independent services share this one
+domain, so do not assume a single app owns all routes.
+
+Useful read-only inventory command:
+
+```bash
+ssh way-fr "hostname; systemctl --no-pager --type=service --state=running | grep -Ei 'qwertystock|support|nginx'; ps -eo pid,user,cmd --sort=cmd | grep -Ei 'detectron|way|support|python|node' | grep -v grep"
+```
+
+Do not treat `way.qwertystock.com` as the primary product/sales site. The main
+sales website remains `https://qwertystock.com` on `145.239.0.57`.

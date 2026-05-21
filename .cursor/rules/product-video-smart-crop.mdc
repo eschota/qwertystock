@@ -1,0 +1,29 @@
+---
+description: Qwertystock product video smart crop
+alwaysApply: true
+---
+
+# Product Video Smart Crop
+
+For Qwertystock product pages, video assets must not use a single poster frame
+as the final smart-crop signal.
+
+- Video smart crop should analyze 15 preview frames extracted with ffmpeg from
+  the product preview video.
+- The crop target is the alternate aspect ratio: horizontal source gets a
+  vertical crop, vertical source gets a horizontal crop.
+- Detectron results should be used to identify one main subject instance across
+  the frame sequence, not a changing union of unrelated objects.
+- Missing detections between valid frames should be interpolated.
+- Main subject bounding boxes and resulting crop windows should be smoothed so
+  the preview does not jitter.
+- Keep the product page fallback safe: if video frame extraction or Detectron
+  fails, fall back to the static thumbnail center/smart crop instead of breaking
+  the product page.
+- Do not send full mask arrays for all video frames to the browser unless there
+  is a specific UI need. Video smart crop should prefer compact boxes and a
+  tracked main subject to keep page payload small.
+
+When changing this flow, test a video product page such as
+`https://qwertystock.com/item?id=3294455` and verify the smart-crop panel reaches
+ready/fallback state without blocking purchase/download controls.
