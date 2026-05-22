@@ -12,5 +12,7 @@ alwaysApply: true
 - Browser/app icons live in `R:\M_plus_front\qwertystock\client\public\img\icons`.
 - Side rail brand UI must render the logo image, never plain text `Q`.
 - The brand system uses dark neutral UI with cyan/blue/violet logo accents. Existing Qwertystock pink may remain for primary action buttons.
+- Production pages must never expose internal infrastructure or "внутреннюю кухню" in user-facing copy. Do not mention internal hosts, service names, process names, deployment mechanics, workers, queues, env vars, API provider plumbing, server aliases, or monitoring bots unless the page is explicitly admin/ops documentation.
+- Replace implementation wording with customer-facing wording: say "Проверяем доступность домена", not "WAY/Namecheap API"; "Готовим файл", not "server fallback/transcode job"; "AI-поиск по смыслу", not raw vector distances or embedding internals.
 - When updating logo/favicon/brand visuals, update `site.webmanifest`, `browserconfig.xml`, favicon links, Open Graph image tags, and smoke test `/`, `/item?id=3295318`, `/api`.
 - Deploy brand changes only with `VERSION` bump and GitHub `main` push, then wait at least 30 seconds before production verification.

@@ -20,6 +20,14 @@ Primary assets live in this skill under `assets/logo/`. The canonical project br
 - Header use: pair the QS orbit mark with text `Qwertystock` in white, heavy weight, zero letter spacing.
 - Do not use decorative gradient orbs, beige/brown palettes, or large marketing hero cards for product/tool pages.
 
+## Production Copy Rule
+
+- Public production pages must not expose internal infrastructure or "внутреннюю кухню".
+- Do not mention internal hosts, service names, process names, deployment mechanics, workers, queues, env vars, repo names, provider API plumbing, server aliases, or monitoring bots unless the page is explicitly admin/ops documentation.
+- Avoid user-facing phrases such as `WAY`, `qwertydata`, `qwertysearch`, `PM2`, `nginx`, `Mongo`, `PostgreSQL`, `Namecheap API`, `OpenAI prompt`, `Detectron`, `IndexNow worker`, `sitemap watcher`, and `Telegram bot`.
+- Replace implementation wording with product wording: "Проверяем доступность домена", "Готовим файл", "AI-поиск по смыслу", "семантический поиск", "статистика индексации".
+- Status text should explain what is happening and what the user can do next, not how the backend implements the step.
+
 ## Asset Map
 
 - `assets/logo/source-qwertystock-qs-orbit-blue.jpg`: original source image.

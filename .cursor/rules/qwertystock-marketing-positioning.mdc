@@ -13,3 +13,10 @@ alwaysApply: false
 - Marketing pages should use real Qwertystock catalog posters behind category/value cards where possible; avoid plain text-only blocks when the section sells a visual concept.
 - Landing presentation zones must not reuse the same catalog asset across hero/mosaic, category cards, and value cards; repeated posters make the catalog look small and must be replaced with unique, topic-relevant assets.
 - Keep the Qwertystock brand system: dark neutral shell, cyan/blue/violet QS accents, and pink only for primary commerce CTAs.
+
+Production copy hygiene:
+
+- Public pages must describe the buyer/author outcome, not the implementation. Do not mention internal hosts, server aliases, repo names, workers, queues, deployment hooks, env vars, monitoring bots, or provider API plumbing.
+- Avoid production UI phrases such as `WAY`, `qwertydata`, `qwertysearch`, `PM2`, `nginx`, `Mongo`, `PostgreSQL`, `Namecheap API`, `OpenAI prompt`, `Detectron`, `IndexNow worker`, `sitemap watcher`, and `Telegram bot` unless the page is clearly admin/ops documentation.
+- Use product wording instead: "подбираем домены", "проверяем цену", "готовим файл", "AI-поиск по смыслу", "семантический поиск", "статистика индексации".
+- User-facing status messages should answer what is happening and what the user can do next. They should not reveal where or how the backend performs the step.
