@@ -1,0 +1,14 @@
+---
+description: Qwertystock marketing positioning for public pages, landing copy, and brand messaging
+alwaysApply: false
+---
+
+# Qwertystock Marketing Positioning
+
+- Qwertystock public marketing must consistently include these pillars: fresh/trending royalty-free catalog, no spam, no endless similars, contributor-first economics, and AI/embedding search.
+- Core differentiator: position Qwertystock as an AI-search-first microstock built around semantic embeddings, not only exact keyword matching.
+- When using the phrase "first in the world", treat it as marketing positioning unless separately verified for legal/compliance copy. Safer public copy can say "built as an AI-search microstock" or "AI-search-first microstock".
+- Explain AI search in buyer language: it finds assets by meaning, scene, objects, mood, visual similarity, and multilingual intent even when exact keywords differ.
+- Do not expose internal embedding scores, vector distances, MPR/RPM, or trend scores in public UI unless a separate product decision explicitly requires it.
+- Marketing pages should use real Qwertystock catalog posters behind category/value cards where possible; avoid plain text-only blocks when the section sells a visual concept.
+- Keep the Qwertystock brand system: dark neutral shell, cyan/blue/violet QS accents, and pink only for primary commerce CTAs.
