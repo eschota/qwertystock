@@ -11,4 +11,5 @@ alwaysApply: false
 - Explain AI search in buyer language: it finds assets by meaning, scene, objects, mood, visual similarity, and multilingual intent even when exact keywords differ.
 - Do not expose internal embedding scores, vector distances, MPR/RPM, or trend scores in public UI unless a separate product decision explicitly requires it.
 - Marketing pages should use real Qwertystock catalog posters behind category/value cards where possible; avoid plain text-only blocks when the section sells a visual concept.
+- Landing presentation zones must not reuse the same catalog asset across hero/mosaic, category cards, and value cards; repeated posters make the catalog look small and must be replaced with unique, topic-relevant assets.
 - Keep the Qwertystock brand system: dark neutral shell, cyan/blue/violet QS accents, and pink only for primary commerce CTAs.
