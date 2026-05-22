@@ -10,7 +10,7 @@ Treat `145.239.0.57` as the primary production server for qwertystock.com.
 - SSH: `generic@145.239.0.57 -p 22744`
 - Local key path: `C:\Users\escho\.ssh\qs_kos.key`
 - Current public domain: `https://qwertystock.com`
-- Current nginx routing: `/` -> `127.0.0.1:8000`, `/search` -> `127.0.0.1:8005`, `/data` and `/payments` -> `127.0.0.1:8001`
+- Current nginx routing: `/` -> `127.0.0.1:8000`, exact `/search` -> `127.0.0.1:8000`, prefix `/search/...` -> `127.0.0.1:8005`, `/data` and `/payments` -> `127.0.0.1:8001`
 - Current inherited runtime: PM2 `qwertystock`, PM2 `qwertydata`, systemd `qwertysearch.service`
 - PM2 `qwertystock` needs `QS_NET_SIGN_KEYS` in its environment; do not use `pm2 restart qwertystock --update-env` unless that env is loaded first, then run `pm2 save`.
 - New main-site repo target: private `eschota/qwertystock-main-site`
