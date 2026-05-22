@@ -1,0 +1,24 @@
+---
+description: Own Microstock project boundaries and scaffold rules
+alwaysApply: true
+---
+
+# Own Microstock
+
+Own Microstock is a separate local product/scaffold area for self-hosted or
+device-owned microstock workflows. Keep it separate from the live Qwertystock
+sales website and from shared domain automation.
+
+- Canonical local scaffold path: `R:\M_plus_front\qwertystock-own-microstock`.
+- Personal Codex skill path: `C:\Users\escho\.codex\skills\own-microstock`.
+- Rules/docs may live in this repo under `.cursor/rules` or `docs` when they
+  describe Qwertystock-adjacent boundaries.
+- Do not implement Own Microstock features inside `R:\M_plus_front\qwertystock`
+  unless the user explicitly asks for integration.
+- Do not touch `R:\M_plus_front\qwertystock_domain_api` for Own Microstock work
+  unless the user explicitly asks for domain/API integration.
+- Do not include secrets, credentialized remotes, private keys, tokens, cookies,
+  production env contents, or customer data in rules, skills, docs, or scaffold
+  files.
+- Treat scaffold files as planning and project-boundary artifacts until the user
+  asks for application code.

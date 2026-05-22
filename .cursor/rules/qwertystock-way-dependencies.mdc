@@ -1,0 +1,29 @@
+---
+description: Qwertystock and Way shared dependency boundaries
+alwaysApply: true
+---
+
+# Qwertystock / Way Dependencies
+
+Qwertystock production, Way-hosted services, support chat, domain automation,
+and experimental adjacent products share infrastructure. Inspect dependency
+boundaries before changing routing, deployment, DNS, service units, or shared
+rules.
+
+- Main Qwertystock sales site is `https://qwertystock.com` on
+  `145.239.0.57`.
+- Way host is `https://way.qwertystock.com` on `37.187.57.177`; it is shared
+  infrastructure, not the main sales site.
+- Way services can depend on the local/remote `qwertystock` app, support chat,
+  nginx routes, systemd units, and domain automation. Read current state before
+  editing.
+- Prefer additive routing and service changes on Way. Do not disturb unrelated
+  services such as support chat, Detectron, RF2, static `/app`, or existing
+  `qwertystock-way.service` routes.
+- Domain, DNS, mail, and Resend work must go through the established
+  `qwertystock_domain_api` safety workflow when that integration is explicitly
+  in scope. Otherwise, leave `R:\M_plus_front\qwertystock_domain_api` untouched.
+- Never bypass shared service dependency checks just because a change appears
+  frontend-only or scaffold-only.
+- Never print or commit secrets, credentialized remotes, private keys, tokens,
+  cookies, production env contents, or raw server credential files.
