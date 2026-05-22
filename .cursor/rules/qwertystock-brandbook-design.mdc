@@ -14,5 +14,8 @@ alwaysApply: true
 - The brand system uses dark neutral UI with cyan/blue/violet logo accents. Existing Qwertystock pink may remain for primary action buttons.
 - Production pages must never expose internal infrastructure or "внутреннюю кухню" in user-facing copy. Do not mention internal hosts, service names, process names, deployment mechanics, workers, queues, env vars, API provider plumbing, server aliases, or monitoring bots unless the page is explicitly admin/ops documentation.
 - Replace implementation wording with customer-facing wording: say "Проверяем доступность домена", not "WAY/Namecheap API"; "Готовим файл", not "server fallback/transcode job"; "AI-поиск по смыслу", not raw vector distances or embedding internals.
+- Localization is mandatory for all production UI and marketing changes. Every new visible string must ship in both primary languages, `ru` and `en`, in the existing translation system.
+- Do not hardcode production text in only one language. Static EJS/HTML should use translation selectors or `data-i18n` keys with matching `ru.json` and `en.json`; dynamic TypeScript/JavaScript text should use the translator or a typed locale dictionary with `ru` and `en` coverage.
+- The site language switch must remain functional for new text on every affected page. A change is not done until both RU and EN variants are present and smoke-tested.
 - When updating logo/favicon/brand visuals, update `site.webmanifest`, `browserconfig.xml`, favicon links, Open Graph image tags, and smoke test `/`, `/item?id=3295318`, `/api`.
 - Deploy brand changes only with `VERSION` bump and GitHub `main` push, then wait at least 30 seconds before production verification.

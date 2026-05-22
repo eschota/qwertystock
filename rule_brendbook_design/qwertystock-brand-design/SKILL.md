@@ -28,6 +28,14 @@ Primary assets live in this skill under `assets/logo/`. The canonical project br
 - Replace implementation wording with product wording: "Проверяем доступность домена", "Готовим файл", "AI-поиск по смыслу", "семантический поиск", "статистика индексации".
 - Status text should explain what is happening and what the user can do next, not how the backend implements the step.
 
+## Localization Rule
+
+- Qwertystock production UI must support both primary languages, `ru` and `en`, for every new or changed visible string.
+- Do not ship Russian-only or English-only copy by default. Static EJS/HTML should use translation selectors or `data-i18n` keys with matching `ru.json` and `en.json` entries.
+- Runtime TypeScript/JavaScript text must use the existing translator or a typed locale dictionary with complete `ru` and `en` values.
+- Localize button labels, placeholders, tooltips, aria labels, validation messages, empty states, progress states, checkout text, admin/status text, and marketing copy.
+- Verify the language switch on every affected page before considering the UI change complete.
+
 ## Asset Map
 
 - `assets/logo/source-qwertystock-qs-orbit-blue.jpg`: original source image.
@@ -45,5 +53,6 @@ When changing Qwertystock frontend design:
 2. Keep favicon files in `client/public/img/icons/`.
 3. Update `site.webmanifest`, `browserconfig.xml`, and template favicon/OG tags when icon assets change.
 4. Use the side rail brand mark as an image, not the literal text `Q`.
-5. Run local build and browser smoke on at least `/`, `/item?id=3295318`, and `/api`.
-6. Deploy only with `VERSION` bump and GitHub `main` push.
+5. Add or update both RU and EN translations for every new visible string.
+6. Run local build and browser smoke on at least `/`, `/item?id=3295318`, and `/api`.
+7. Deploy only with `VERSION` bump and GitHub `main` push.

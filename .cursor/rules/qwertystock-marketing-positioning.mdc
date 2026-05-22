@@ -20,3 +20,9 @@ Production copy hygiene:
 - Avoid production UI phrases such as `WAY`, `qwertydata`, `qwertysearch`, `PM2`, `nginx`, `Mongo`, `PostgreSQL`, `Namecheap API`, `OpenAI prompt`, `Detectron`, `IndexNow worker`, `sitemap watcher`, and `Telegram bot` unless the page is clearly admin/ops documentation.
 - Use product wording instead: "подбираем домены", "проверяем цену", "готовим файл", "AI-поиск по смыслу", "семантический поиск", "статистика индексации".
 - User-facing status messages should answer what is happening and what the user can do next. They should not reveal where or how the backend performs the step.
+
+Localization:
+
+- Public marketing, landing, product, profile, checkout, API, and service-facing UI copy must be written for both `ru` and `en` at the same time.
+- Do not add Russian-only or English-only production copy. If a phrase appears in the UI, add/update the corresponding translation entries for both primary languages and verify the language switch.
+- Runtime-generated copy, notifications shown in UI, button text, empty states, progress states, tooltips, aria labels, placeholders, and validation messages are part of localization and need both languages too.

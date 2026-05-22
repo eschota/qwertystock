@@ -42,6 +42,14 @@ Use generated web assets from `assets/logo/` and mirror them into the main site:
   - "AI-поиск по смыслу" or "семантический поиск" instead of raw vector-distance or embedding internals.
 - Status text should tell users what is happening, what is ready, what failed, and what to do next. It must not expose the internal path used to complete the task.
 
+## Localization
+
+- Qwertystock production UI has two primary languages: `ru` and `en`. All public-facing and account-facing text must be added in both languages by default.
+- A UI, marketing, checkout, profile, API, product, admin, notification surface, or landing change is not complete if visible copy exists only in one language.
+- Static templates must use the existing translation system: translation selectors or `data-i18n` keys plus matching `client/public/text/translations/<page>/ru.json` and `client/public/text/translations/<page>/en.json` entries.
+- Runtime-generated strings must use the translator or a typed locale dictionary with full `ru` and `en` coverage. This includes progress text, empty states, error states, button labels, placeholders, tooltips, aria labels, and validation messages.
+- The language switch is part of the acceptance criteria. After adding copy, verify that switching between RU and EN updates the affected surface and does not leave mixed-language UI.
+
 ## Asset Generation
 
 Generate web assets from the source with ImageMagick. Keep generated files in both:
