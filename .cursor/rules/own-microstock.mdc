@@ -20,5 +20,67 @@ sales website and from shared domain automation.
 - Do not include secrets, credentialized remotes, private keys, tokens, cookies,
   production env contents, or customer data in rules, skills, docs, or scaffold
   files.
-- Treat scaffold files as planning and project-boundary artifacts until the user
-  asks for application code.
+- When the user explicitly asks for product integration, keep the runtime split:
+  Qwertystock sells and manages the tenant, Way/domain-api owns registrar/DNS
+  safety, and `qwertystock-own-microstock` owns tenant storefront code.
+
+## Post-Purchase Lifecycle
+
+After a paid Own Microstock invoice, the system must progress through explicit,
+idempotent steps:
+
+1. `domain_purchase_success`
+2. `dns_configured`
+3. `site_deployed`
+4. `ssl_ready`
+5. `robots_txt_generated`
+6. `sitemap_generated`
+7. `indexnow_key_generated`
+8. `indexnow_key_file_deployed`
+9. `search_engines_submit_job_created`
+10. `active`
+
+Provisioning must be asynchronous and retryable. Payment finalization must not
+depend on long DNS, SSL, Search Console, Bing, Yandex, or IndexNow calls.
+Each step must be safe to rerun without double domain registration, duplicate
+DNS writes, duplicate deploys, or repeated search-engine spam.
+
+Do not mark a tenant as `active` until public checks pass for the tenant domain:
+`/`, `/robots.txt`, `/sitemap.xml`, and `/{indexnow_key}.txt`. These checks are
+required because domain purchase alone does not prove that the tenant storefront
+is actually reachable.
+
+## Tenant SEO
+
+Every tenant domain must expose these public routes at minimum:
+
+- `/`
+- `/about`
+- `/license`
+- `/contact`
+- `/robots.txt`
+- `/sitemap.xml`
+- `/{indexnow_key}.txt`
+- `/category/...`
+- `/model/...`
+
+Each tenant gets its own IndexNow key and root key file. Bing/Yandex submission
+uses IndexNow and Webmaster APIs where credentials are configured. Google uses
+Search Console API, sitemap submission, DNS/site verification when available,
+and high-quality crawlable links from Qwertystock.
+
+## Anti-Clone Rule
+
+Own Microstock sites must use a shared engine, not shared output. Do not publish
+full clones of Qwertystock or of other tenant sites.
+
+- Tenant catalog scope is only that author/brand's visible sellable files or an
+  explicitly curated owned catalog.
+- Tenant home/about/category/model pages must have unique brand text, title,
+  description, hero/featured media, category order, and theme/layout variant.
+- Tenant sitemaps must contain only tenant URLs, never the full Qwertystock
+  catalog.
+- Tenant canonicals must point to the tenant domain, not `qwertystock.com`.
+- Qwertystock may link to each tenant through a curated `/brands/...` page, and
+  the tenant may link back to the Qwertystock profile. Do not build a large
+  mutual-link grid between tenant domains.
