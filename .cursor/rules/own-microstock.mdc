@@ -13,6 +13,10 @@ sales website and from shared domain automation.
 - Personal Codex skill path: `C:\Users\escho\.codex\skills\own-microstock`.
 - Rules/docs may live in this repo under `.cursor/rules` or `docs` when they
   describe Qwertystock-adjacent boundaries.
+- The canonical development memory for this product is
+  `R:\M_plus_front\qwertystock-own-microstock\documentation\skill.md`. Update it
+  with version, current stage, decisions, and TODO whenever Own Microstock flow,
+  domain quoting, provisioning, tenant SEO, or deployment behavior changes.
 - Do not implement Own Microstock features inside `R:\M_plus_front\qwertystock`
   unless the user explicitly asks for integration.
 - Do not touch `R:\M_plus_front\qwertystock_domain_api` for Own Microstock work
