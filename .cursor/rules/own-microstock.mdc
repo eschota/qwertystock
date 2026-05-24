@@ -73,6 +73,20 @@ uses IndexNow and Webmaster APIs where credentials are configured. Google uses
 Search Console API, sitemap submission, DNS/site verification when available,
 and high-quality crawlable links from Qwertystock.
 
+Tenant social previews are part of SEO. Every active tenant must provide
+canonical Open Graph/Twitter metadata for Telegram and other social unfurlers:
+`og:title`, `og:description`, `og:url`, `og:image`, `twitter:image`, and
+`og:video` when a suitable tenant video preview exists. Preview media must come
+from the tenant author's own catalog, preferring the strongest/trending video
+poster, then photo, then vector/illustration preview. Never use the old global
+Qwertystock logo or an empty preview for tenant domains.
+
+Default tenant social description should be English and buyer-facing:
+"Buy stock content directly from the author at a fair price. Royalty-free
+licenses for media products are available on this site." Public tenant pages
+must not mention internal implementation details, providers, workers, servers,
+or registry APIs.
+
 ## Anti-Clone Rule
 
 Own Microstock sites must use a shared engine, not shared output. Do not publish
